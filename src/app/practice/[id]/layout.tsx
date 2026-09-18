@@ -5,7 +5,6 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { exercises, exercisesIn, findExercise, LEVEL_TITLES, units } from "@/lib/curriculum/tree";
-import { getLesson } from "@/lib/lessons/curriculum";
 
 export function generateStaticParams() {
   return exercises.map((e) => ({ id: e.id }));
@@ -17,15 +16,6 @@ export function generateMetadata({ params }: { params: { id: string } }): Metada
   return { title: exercise.title, description: exercise.blurb };
 }
 
-/** The authored lessons still carry their teaching points. */
-function pointsFor(id: string): string[] {
-  try {
-    return getLesson(id).teachingPoints;
-  } catch {
-    return [];
-  }
-}
-
 export default function PracticeLayout({ children, params }: { children: React.ReactNode; params: { id: string } }) {
   const exercise = findExercise(params.id);
   if (!exercise) notFound();
@@ -34,7 +24,7 @@ export default function PracticeLayout({ children, params }: { children: React.R
   const i = siblings.findIndex((e) => e.id === exercise.id);
   const prev = siblings[i - 1];
   const next = siblings[i + 1];
-  const points = pointsFor(exercise.id);
+  const points = exercise.teachingPoints;
 
   return (
     <main className="page page--lesson">

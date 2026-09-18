@@ -10,10 +10,12 @@ export type Style = "swing" | "ballad" | "bossa" | "blues";
 export interface Tune {
   slug: string;
   title: string;
-  /** Public domain or traditional only. Absent means chords only. */
+  /** Absent for a generic form such as a blues. */
   composer?: string;
   year?: number;
   key: KeyName;
+  /** The key is minor, so its flats are read from the relative major. */
+  minor?: boolean;
   style: Style;
   bpm: { min: number; default: number; max: number };
   /** Bars between pipes, one chord or two per bar ("Dm7 G7"), "%" repeats the

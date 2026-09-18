@@ -7,23 +7,33 @@
 // Sounding right comes from voice leading and from keeping every note of the
 // tune inside its chord, not from any freedom in the generation.
 
-import { chordTones, parseChord, snapToChord, stepInSet } from "@/lib/music/chords";
-import { pitchClass, pitchClassName, type Midi, type Spelling } from "@/lib/music/notes";
+import { chordTones, parseChord, snapToChord, stepInSet, type Chord } from "@/lib/music/chords";
+import { describeMove, spellInChord } from "@/lib/music/harmony";
+import { pitchClass, type Midi, type Spelling } from "@/lib/music/notes";
 import { voice, type VoicingStyle } from "@/lib/music/voicings";
 import { reharmonise, type ChartChord, type Reharm } from "@/lib/lessons/reharm";
 import type { BandChart, Hand, HarmonyRegion, LessonStep } from "@/lib/lessons/types";
 import type { Style } from "@/lib/tunes/types";
-import { bassLine } from "./bass";
+import { bassLine, guitarComp } from "./bass";
+import { ensemble } from "./ensemble";
 
 export type VoicingChoice = "written" | VoicingStyle;
 export type MelodyChoice = "written" | "arpeggio" | "enclosure" | "scaleRun";
-export type RhythmChoice = "written" | "held" | "charleston" | "anticipate";
+export type RhythmChoice = "written" | "held" | "charleston" | "anticipate" | "fill";
+/**
+ * Who plays what. written: the left hand has the chord, the right the tune.
+ * melodyTop: the left hand has the root, and the right hand fills the chord in
+ * under the tune. stride: the left hand alternates bass and chord on the beat.
+ * solo: the right hand alone, and the band has the chords.
+ */
+export type TextureChoice = "written" | "melodyTop" | "stride" | "solo";
 
 export interface Variation {
   voicing: VoicingChoice;
   reharm: Reharm;
   melody: MelodyChoice;
   rhythm: RhythmChoice;
+  texture: TextureChoice;
 }
 
 /** Ticks per beat. Twelve holds both the swung eighth (8 + 4) and the triplet. */
@@ -153,7 +163,13 @@ interface Hit {
   chord: ChartChord;
 }
 
-function compHits(comp: NoteEvent[], chords: ChartChord[], rhythm: RhythmChoice, chart: Chart): Hit[] {
+function compHits(
+  comp: NoteEvent[],
+  chords: ChartChord[],
+  rhythm: RhythmChoice,
+  chart: Chart,
+  melody: NoteEvent[],
+): Hit[] {
   const { total } = chart;
   if (rhythm === "written" && comp.length > 0) {
     // The written hits, split wherever the reharmonisation changed chord
@@ -180,6 +196,27 @@ function compHits(comp: NoteEvent[], chords: ChartChord[], rhythm: RhythmChoice,
     if (density === "charleston" && push < total) times.set(push, chordAt(chords, push));
   }
   for (const c of chords) if (c.start >= from) times.set(c.start, c);
+  if (density === "fill") {
+    // Only the changes are kept from the bar grid. Then one hit in each hole:
+    // the first beat on which the tune starts nothing, as long as the tune has
+    // moved since the left hand last played.
+    const onsets = melody.map((e) => e.start);
+    let lastHit = -Infinity;
+    let lastOnset = -Infinity;
+    for (let b = from; b < total; b += TPB) {
+      for (const o of onsets) if (o <= b) lastOnset = Math.max(lastOnset, o);
+      if (chords.some((c) => c.start === b)) {
+        lastHit = b;
+        continue;
+      }
+      times.delete(b);
+      const quiet = !onsets.some((o) => o >= b && o < b + TPB);
+      if (quiet && lastOnset >= lastHit) {
+        times.set(b, chordAt(chords, b));
+        lastHit = b;
+      }
+    }
+  }
   if (density === "anticipate") {
     // Each change arrives on the and of the beat before, and rings over it.
     for (const c of chords) {
@@ -218,6 +255,66 @@ function voiceHits(hits: Hit[], style: VoicingChoice, melody: NoteEvent[], chart
     prevChord = hit.chord;
     return { start: hit.start, len: hit.len, notes };
   });
+}
+
+/**
+ * The chord in close position with `top` as its highest note: the inversion a
+ * melody note asks for. Null when the note is not the root, 3rd, 5th or 7th,
+ * since a passing note is played alone.
+ */
+export function closeUnder(chord: Chord, top: Midi): Midi[] | null {
+  const pcs = (["R", "3", "5", "7"] as const).map((d) => pitchClass(chord.rootPc + chord.degrees[d]));
+  if (!pcs.includes(pitchClass(top))) return null;
+  const below = pcs.filter((pc) => pc !== pitchClass(top)).map((pc) => top - pitchClass(top - pc));
+  return [...below.sort((a, b) => a - b), top];
+}
+
+/**
+ * The right hand fills the chord in under the tune on the notes that carry
+ * it: a chord change, beat one or three, or anything held two beats. The notes
+ * in between, and any note that is not in the chord, stay single.
+ */
+function blockUnder(melody: NoteEvent[], chords: ChartChord[], chart: Chart): NoteEvent[] {
+  const bar = ticks(chart.beatsPerBar);
+  const strong = chart.beatsPerBar === 4 ? [0, 2 * TPB] : [0];
+  return melody.map((e) => {
+    if (e.notes.length !== 1 || e.start < chart.startTick) return e;
+    const c = chordAt(chords, e.start);
+    // A note held over a change would carry the old chord into the new one.
+    if (end(e) > end(c)) return e;
+    const carries = c.start === e.start || strong.includes((e.start - chart.startTick) % bar) || e.len >= 2 * TPB;
+    const block = carries ? closeUnder(parseChord(c.symbol), e.notes[0]) : null;
+    return block ? { ...e, notes: block } : e;
+  });
+}
+
+/** The chord's root in the bass octave, from about C2 up. */
+function bassNote(pc: number, chart: Chart): Midi {
+  const floor = Math.max(36, chart.range.low);
+  return floor + pitchClass(pc - floor);
+}
+
+/**
+ * Stride: bass on one and three, chord on two and four; in three, bass on one
+ * and chord on two and three. The bass on three is the 5th when the chord has
+ * not changed, so the left hand swings between root and fifth.
+ */
+function strideHits(chords: ChartChord[], chart: Chart): { bass: NoteEvent[]; hits: Hit[] } {
+  const bass: NoteEvent[] = [];
+  const hits: Hit[] = [];
+  for (let b = chart.startTick; b < chart.total; b += TPB) {
+    const c = chordAt(chords, b);
+    const beat = ((b - chart.startTick) / TPB) % chart.beatsPerBar;
+    const len = Math.min(TPB, chart.total - b);
+    if (beat === 0 || (chart.beatsPerBar === 4 && beat === 2)) {
+      const chord = parseChord(c.symbol);
+      const pc = beat === 2 && c.start < b ? chord.rootPc + chord.degrees[5] : chord.rootPc;
+      bass.push({ start: b, len, notes: [bassNote(pc, chart)] });
+    } else {
+      hits.push({ start: b, len, chord: c });
+    }
+  }
+  return { bass, hits };
 }
 
 function render(
@@ -267,7 +364,7 @@ function render(
     const fresh = mel.find((e) => e.start === a);
     const label =
       fresh?.label ??
-      (fresh ? `${symbol}, ${pitchClassName(fresh.notes[fresh.notes.length - 1], spelling)} on top` : symbol);
+      (fresh ? `${symbol}, ${spellInChord(symbol, fresh.notes[fresh.notes.length - 1], spelling)} on top` : symbol);
     // A rest: nothing sounding at all. Kept as a silent step so time passes.
     steps.push({
       notes,
@@ -288,9 +385,22 @@ export interface Arrangement {
 
 export function arrange(chart: Chart, v: Variation, comp: NoteEvent[] = []): Arrangement {
   const chords = reharmonise(chart.chords, v.reharm, TPB, chart.spelling);
-  const melody = shapeMelody(chart.melody, chords, v.melody, chart);
-  const hits = compHits(comp, chords, v.rhythm, chart);
-  const voiced = voiceHits(hits, v.voicing, melody, chart);
+  const shaped = shapeMelody(chart.melody, chords, v.melody, chart);
+  const melody = v.texture === "melodyTop" ? blockUnder(shaped, chords, chart) : shaped;
+  const stride = v.texture === "stride" ? strideHits(chords, chart) : null;
+  const hits = stride ? stride.hits : v.texture === "solo" ? [] : compHits(comp, chords, v.rhythm, chart, melody);
+  // What the left hand plays, and the chord shapes whose moves are described:
+  // the left hand's chords, or with the melody on top, the right hand's.
+  let left: NoteEvent[];
+  let shapes: { chord: ChartChord; notes: Midi[] }[];
+  if (v.texture === "melodyTop") {
+    left = hits.map((h) => ({ start: h.start, len: h.len, notes: [bassNote(parseChord(h.chord.symbol).rootPc, chart)] }));
+    shapes = melody.filter((e) => e.notes.length > 1).map((e) => ({ chord: chordAt(chords, e.start), notes: e.notes }));
+  } else {
+    const voiced = voiceHits(hits, v.voicing, melody, chart);
+    left = stride ? [...stride.bass, ...voiced] : voiced;
+    shapes = hits.map((h, k) => ({ chord: h.chord, notes: voiced[k].notes }));
+  }
 
   // An anticipated chord starts its region on the push, so the analysis and
   // the degrees on the keys change when the chord is actually heard.
@@ -298,21 +408,26 @@ export function arrange(chart: Chart, v: Variation, comp: NoteEvent[] = []): Arr
     const first = hits.find((h) => h.chord === c);
     return first && first.start < c.start ? first.start : c.start;
   });
-  const { steps, times } = render(melody, voiced, chords, regionStarts, chart.spelling, chart.total);
+  const { steps, times } = render(melody, left, chords, regionStarts, chart.spelling, chart.total);
 
-  const keepMove = v.voicing === "written" && v.reharm === "written";
+  const keepMove = v.voicing === "written" && v.reharm === "written" && v.texture === "written";
+  // Otherwise the move is read off the chords as generated: the last shape of
+  // the chord before against the first shape of this one.
+  const moveInto = (c: ChartChord): string | undefined => {
+    const k = shapes.findIndex((s) => s.chord === c);
+    if (k < 1) return undefined;
+    return describeMove(
+      { symbol: shapes[k - 1].chord.symbol, notes: shapes[k - 1].notes },
+      { symbol: c.symbol, notes: shapes[k].notes },
+      chart.spelling,
+    );
+  };
   const reharmonised = chords.some((c) => !c.written);
   const startBeat = chart.startTick / TPB;
-  const bass =
-    chart.bass && !reharmonised
-      ? chart.bass
-      : bassLine(
-          chords
-            .filter((c) => end(c) > chart.startTick)
-            .map((c) => ({ symbol: c.symbol, beats: (end(c) - Math.max(c.start, chart.startTick)) / TPB })),
-          chart.style,
-          chart.beatsPerBar,
-        );
+  const sounding = chords
+    .filter((c) => end(c) > chart.startTick)
+    .map((c) => ({ symbol: c.symbol, beats: (end(c) - Math.max(c.start, chart.startTick)) / TPB }));
+  const bass = chart.bass && !reharmonised ? chart.bass : bassLine(sounding, chart.style, chart.beatsPerBar);
 
   return {
     steps,
@@ -321,9 +436,15 @@ export function arrange(chart: Chart, v: Variation, comp: NoteEvent[] = []): Arr
       symbol: c.symbol,
       numeral: c.numeral,
       role: c.role,
-      move: keepMove ? c.move : undefined,
+      move: keepMove && c.move ? c.move : moveInto(c),
     })),
-    band: { startBeat, beatsPerBar: chart.beatsPerBar, bass },
+    band: {
+      startBeat,
+      beatsPerBar: chart.beatsPerBar,
+      bass,
+      comp: guitarComp(sounding),
+      ensemble: ensemble(sounding, chart.beatsPerBar),
+    },
   };
 }
 

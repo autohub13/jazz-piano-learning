@@ -6,6 +6,7 @@
 // be moved safely is dropped rather than left saying something false.
 
 import { MAX_BASE, MIN_BASE } from "@/lib/music/computerKeys";
+import { describeMove } from "@/lib/music/harmony";
 import { isBlackKey, pitchClass, pitchClassName, transpose, type Midi, type Spelling } from "@/lib/music/notes";
 import type { Lesson } from "./types";
 
@@ -79,14 +80,26 @@ export function transposeLesson(lesson: Lesson, key: KeyName): Lesson {
   let high = move(lesson.range.high);
   while (isBlackKey(high)) high++;
 
+  const spelling = spellingFor(key);
+  const steps = lesson.steps.map((step) => ({ ...step, notes: step.notes.map(move) }));
+  const leftAt = (i: number) =>
+    steps[i].notes.filter((_, j) => (steps[i].hands?.[j] ?? steps[i].hand) === "left");
+  /** Left-hand notes of the nearest step from `from`, walking `dir`, that has any. */
+  const leftFrom = (from: number, dir: 1 | -1): Midi[] => {
+    for (let i = from; i >= 0 && i < steps.length; i += dir) {
+      const notes = leftAt(i);
+      if (notes.length > 0) return notes;
+    }
+    return [];
+  };
+
   return {
     ...lesson,
-    spelling: spellingFor(key),
+    spelling,
     range: { low, high },
     keyboardBase: Math.min(MAX_BASE, Math.max(MIN_BASE, move(lesson.keyboardBase))),
-    steps: lesson.steps.map((step) => ({
+    steps: steps.map((step) => ({
       ...step,
-      notes: step.notes.map(move),
       label: step.label && respellText(step.label, key, false),
       // Written for C. Once black keys appear they are simply wrong, and a
       // wrong finger number teaches a habit where a missing one does not.
@@ -96,13 +109,24 @@ export function transposeLesson(lesson: Lesson, key: KeyName): Lesson {
       ...lesson.band,
       bass: lesson.band.bass.map((note) => (note === null ? null : move(note))),
     },
-    harmony: lesson.harmony?.map((region) => ({
-      ...region,
-      symbol: respellText(region.symbol, key, false),
-      role: respellText(region.role, key, true),
+    harmony: lesson.harmony?.map((region, i, all) => {
+      const symbol = respellText(region.symbol, key, false);
       // Voice-leading prose names particular keys in particular octaves and
-      // is too easy to get subtly wrong by substitution.
-      move: undefined,
-    })),
+      // is too easy to get subtly wrong by substitution, so it is read off
+      // the moved notes instead.
+      const prev = all[i - 1];
+      return {
+        ...region,
+        symbol,
+        role: respellText(region.role, key, true),
+        move: prev
+          ? describeMove(
+              { symbol: respellText(prev.symbol, key, false), notes: leftFrom(region.fromStep - 1, -1) },
+              { symbol, notes: leftFrom(region.fromStep, 1) },
+              spelling,
+            )
+          : undefined,
+      };
+    }),
   };
 }

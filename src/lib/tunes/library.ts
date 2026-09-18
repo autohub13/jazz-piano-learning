@@ -52,7 +52,7 @@ export const tunes: Tune[] = [
     style: "blues",
     bpm: { min: 70, default: 120, max: 220 },
     level: 2,
-    blurb: "The horn players' key. Same form as the F blues, new hand shapes.",
+    blurb: "The horn players' key, and the changes under Tenor Madness and Sonnymoon for Two. Same form as the F blues, new hand shapes.",
     form: `
       | Bb7 | Eb7 | Bb7 | % |
       | Eb7 | % | Bb7 | % |
@@ -60,23 +60,24 @@ export const tunes: Tune[] = [
     `,
   },
   {
-    slug: "st-louis-strain",
-    title: "St. Louis strain",
-    composer: "Traditional form",
+    slug: "blues-cycle",
+    title: "Blues with a cycle",
     key: "G",
     style: "blues",
     bpm: { min: 70, default: 108, max: 160 },
     level: 3,
-    blurb: "The twelve-bar strain of the most recorded blues of the 1920s, in G.",
+    blurb: "Twelve bars in G where E7, A7 and D7 fall by fifths back home. The blues with dominants that move.",
     form: `
       | G7 | C7 | G7 | % |
-      | C7 | % | G7 | % |
-      | D7 | C7 | G7 | D7 |
+      | C7 | % | G7 | E7 |
+      | A7 | D7 | G7 E7 | A7 D7 |
     `,
   },
   {
     slug: "ja-da-changes",
-    title: "Ja-Da changes",
+    title: "Ja-Da",
+    composer: "Bob Carleton",
+    year: 1918,
     key: "C",
     style: "swing",
     bpm: { min: 90, default: 140, max: 200 },
@@ -89,12 +90,14 @@ export const tunes: Tune[] = [
   },
   {
     slug: "indiana-changes",
-    title: "Indiana changes",
+    title: "Back Home Again in Indiana",
+    composer: "James F. Hanley",
+    year: 1917,
     key: "F",
     style: "swing",
     bpm: { min: 100, default: 160, max: 240 },
     level: 3,
-    blurb: "Thirty-two bars of a 1917 tune that became a bebop vehicle. Dominants everywhere.",
+    blurb: "Thirty-two bars of a 1917 tune that became a bebop vehicle: Donna Lee is written over these changes. Dominants everywhere.",
     form: `
       | F6 | % | Bb7 | % | F6 | D7 | G7 | % |
       | C7 | % | F6 | % | Am7 | D7 | Gm7 | C7 |
@@ -103,22 +106,94 @@ export const tunes: Tune[] = [
     `,
   },
   {
+    slug: "a-train",
+    title: "Take the A Train",
+    composer: "Billy Strayhorn",
+    year: 1939,
+    key: "C",
+    style: "swing",
+    bpm: { min: 90, default: 150, max: 220 },
+    level: 3,
+    blurb: "The Ellington band's theme. Thirty-two bars, AABA, and the II7 with a #11 in bar three is the whole personality of the tune.",
+    form: `
+      | C6 | % | D7#11 | % | Dm7 | G7 | C6 | Dm7 G7 |
+      | C6 | % | D7#11 | % | Dm7 | G7 | C6 | % |
+      | Fmaj7 | % | % | % | D7 | % | Dm7 | G7 |
+      | C6 | % | D7#11 | % | Dm7 | G7 | C6 | Dm7 G7 |
+    `,
+  },
+  {
+    slug: "all-of-me",
+    title: "All of Me",
+    composer: "Gerald Marks and Seymour Simons",
+    year: 1931,
+    key: "C",
+    style: "swing",
+    bpm: { min: 90, default: 140, max: 220 },
+    level: 3,
+    blurb: "The jam session standby. Two bars a chord, and nearly every one is a dominant falling a fifth into the next.",
+    form: `
+      | C6 | % | E7 | % | A7 | % | Dm7 | % |
+      | E7 | % | Am7 | % | D7 | % | Dm7 | G7 |
+      | C6 | % | E7 | % | A7 | % | Dm7 | % |
+      | Fmaj7 | Fm6 | C6 Em7 | A7 | Dm7 | G7 | C6 | Dm7 G7 |
+    `,
+  },
+  {
+    slug: "satin-doll",
+    title: "Satin Doll",
+    composer: "Duke Ellington and Billy Strayhorn",
+    year: 1953,
+    key: "C",
+    style: "swing",
+    bpm: { min: 80, default: 120, max: 180 },
+    level: 4,
+    blurb: "ii-Vs that climb a step at a time, then Abm7 Db7 sliding into C: a tritone substitute you can hum.",
+    form: `
+      | Dm7 G7 | % | Em7 A7 | % | Am7 D7 | Abm7 Db7 | Cmaj7 | Em7 A7 |
+      | Dm7 G7 | % | Em7 A7 | % | Am7 D7 | Abm7 Db7 | Cmaj7 | % |
+      | Gm7 C7 | % | Fmaj7 | % | Am7 D7 | % | G7 | % |
+      | Dm7 G7 | % | Em7 A7 | % | Am7 D7 | Abm7 Db7 | Cmaj7 | Em7 A7 |
+    `,
+  },
+  {
+    slug: "so-what",
+    title: "So What",
+    composer: "Miles Davis",
+    year: 1959,
+    key: "D",
+    style: "swing",
+    bpm: { min: 90, default: 136, max: 220 },
+    level: 5,
+    blurb: "Sixteen bars of one chord, eight a half step up, eight back. One scale at a time, and all the room in the world.",
+    form: `
+      | Dm7 | % | % | % | % | % | % | % |
+      | Dm7 | % | % | % | % | % | % | % |
+      | Ebm7 | % | % | % | % | % | % | % |
+      | Dm7 | % | % | % | % | % | % | % |
+    `,
+  },
+  {
     slug: "minor-blues",
-    title: "Minor blues in C",
+    title: "Mr. P.C.",
+    composer: "John Coltrane",
+    year: 1959,
     key: "C",
     style: "blues",
-    bpm: { min: 70, default: 120, max: 200 },
+    bpm: { min: 70, default: 120, max: 240 },
     level: 4,
-    blurb: "Twelve bars in C minor. The Ab7 to G7 in bars nine and ten is the sound to learn.",
+    blurb: "Coltrane's minor blues in C. The Ab7 to G7 in bars nine and ten is the sound to learn.",
     form: `
-      | Cm7 | Fm7 | Cm7 | % |
+      | Cm7 | % | % | % |
       | Fm7 | % | Cm7 | % |
       | Ab7 | G7b9 | Cm7 | G7b9 |
     `,
   },
   {
     slug: "autumn-changes",
-    title: "Autumn changes",
+    title: "Autumn Leaves",
+    composer: "Joseph Kosma",
+    year: 1945,
     key: "G",
     style: "swing",
     bpm: { min: 90, default: 140, max: 220 },
@@ -138,7 +213,7 @@ export const tunes: Tune[] = [
     style: "blues",
     bpm: { min: 90, default: 140, max: 240 },
     level: 5,
-    blurb: "The blues with every substitution a bebop player adds: the ii-V in bar four, the diminished in bar six, the turnaround.",
+    blurb: "The changes under Billie's Bounce and Now's the Time. The blues with every substitution a bebop player adds: the ii-V in bar four, the diminished in bar six, the turnaround.",
     form: `
       | F7 | Bb7 | F7 | Cm7 F7 |
       | Bb7 | Bdim7 | F7 | Am7 D7 |
@@ -147,12 +222,14 @@ export const tunes: Tune[] = [
   },
   {
     slug: "rhythm-changes",
-    title: "Rhythm changes",
+    title: "I Got Rhythm",
+    composer: "George Gershwin",
+    year: 1930,
     key: "Bb",
     style: "swing",
     bpm: { min: 120, default: 180, max: 280 },
     level: 6,
-    blurb: "The second most played form in jazz. Two chords a bar, a bridge of dominants, and a tempo that keeps rising.",
+    blurb: "Rhythm changes: the second most played form in jazz, under Oleo, Anthropology and The Flintstones theme. Two chords a bar, a bridge of dominants, and a tempo that keeps rising.",
     form: `
       | Bbmaj7 G7 | Cm7 F7 | Bbmaj7 G7 | Cm7 F7 | Bbmaj7 Bb7 | Ebmaj7 Ebm6 | Dm7 G7 | Cm7 F7 |
       | Bbmaj7 G7 | Cm7 F7 | Bbmaj7 G7 | Cm7 F7 | Bbmaj7 Bb7 | Ebmaj7 Ebm6 | Cm7 F7 | Bbmaj7 |

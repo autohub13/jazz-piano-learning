@@ -3,7 +3,7 @@
 // so a voicing and a melody over the same symbol can never disagree.
 
 import { rootPitchClass } from "./harmony";
-import { pitchClass, pitchClassName, type Midi, type Spelling } from "./notes";
+import { letterIndex, pitchClass, pitchClassName, spellOnLetter, type Midi, type Spelling } from "./notes";
 
 export type Quality = "maj7" | "6" | "m7" | "m6" | "7" | "m7b5" | "dim7";
 export type Degree = "R" | "3" | "5" | "7" | "9" | "11" | "13";
@@ -109,6 +109,19 @@ export function stepInSet(chord: Chord, set: readonly number[], from: Midi, dir:
     if (set.includes(relative(chord, m))) return m;
   }
   return from + dir;
+}
+
+/** Letters above the tonic for each semitone: I bII II bIII III IV #IV V bVI VI bVII VII. */
+const DEGREE_LETTER = [0, 1, 1, 2, 2, 3, 3, 4, 5, 5, 6, 6];
+
+/**
+ * The root that sits `semitones` above the tonic of `key`, spelled by its
+ * degree: the bVI of C is Ab and the bIII of G is Bb, even though G otherwise
+ * reads in sharps.
+ */
+export function rootOnDegree(key: string, semitones: number, spelling: Spelling): string {
+  const step = pitchClass(semitones);
+  return spellOnLetter(letterIndex(key) + DEGREE_LETTER[step], rootPitchClass(key) + step, spelling);
 }
 
 /** "G7" up three semitones in flats is "Bb7". Keeps everything after the root. */

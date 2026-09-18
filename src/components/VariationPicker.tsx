@@ -22,7 +22,12 @@ const AXES: { axis: keyof Variation; caption: string; names: Record<string, stri
   {
     axis: "rhythm",
     caption: "Comping",
-    names: { written: "As written", held: "Held", charleston: "Charleston", anticipate: "Anticipations" },
+    names: { written: "As written", held: "Held", charleston: "Charleston", anticipate: "Anticipations", fill: "In the gaps" },
+  },
+  {
+    axis: "texture",
+    caption: "Hands",
+    names: { written: "As written", melodyTop: "Melody on top", stride: "Stride", solo: "Right hand alone" },
   },
 ];
 

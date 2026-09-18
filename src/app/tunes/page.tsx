@@ -16,8 +16,8 @@ export default function TunesPage() {
         <h1 className="hero__title">The repertoire</h1>
         <p className="hero__body">
           Every tune is a chord chart. The arrangement, the walking bass and the comping are generated for the
-          level you are at and the key you pick, so the same tune grows with you. Melodies are traditional or
-          original; the changes of standards are given under their own names.
+          level you are at and the key you pick, so the same tune grows with you. Standards are here under
+          their own names, as the changes you comp and improvise over with the band.
         </p>
       </section>
       <ol className="lesson-grid">
@@ -32,7 +32,8 @@ export default function TunesPage() {
                 <span className="lesson-card__ingredient">{tune.blurb}</span>
                 <span className="lesson-card__meta">
                   {tune.key} · {tune.style} · {tune.bpm.default} bpm
-                  {tune.composer ? ` · ${tune.composer}` : " · changes only"}
+                  {tune.composer && ` · ${tune.composer}`}
+                  {!tune.melody && " · changes only"}
                 </span>
                 <span className="lesson-card__links">
                   {play && (

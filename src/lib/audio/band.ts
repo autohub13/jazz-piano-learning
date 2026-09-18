@@ -1,4 +1,5 @@
-// A synthesized rhythm section: upright bass and a brushed kit.
+// A synthesized band: upright bass, rhythm guitar and a brushed kit, with a
+// vibraphone and a horn section on the charts that have them.
 //
 // Synthesized rather than sampled on purpose. It costs nothing to download, it
 // is available the instant the AudioContext exists, and it still works when the
@@ -20,6 +21,8 @@ export interface ScheduleOptions {
   /** Absolute AudioContext time of beat zero of the loop. */
   t0: number;
   bpm: number;
+  /** Absolute AudioContext time to stop at. No beat on or after it is played. */
+  until?: number;
 }
 
 export interface Band {
@@ -123,7 +126,9 @@ export function createBand(ctx: AudioContext, chart: BandChart): Band {
 
   /**
    * Upright bass. Mostly fundamental, a lowpass that opens on the attack for
-   * the pluck, and a short noise transient for the finger on the string.
+   * the pluck, and a short noise transient for the finger on the string. The
+   * octave above is mixed in because a laptop speaker has nothing below about
+   * 150 Hz: without it the line is there on headphones and gone everywhere else.
    */
   function bass(t: number, note: Midi, dur: number) {
     const freq = midiToFreq(note);
@@ -132,7 +137,7 @@ export function createBand(ctx: AudioContext, chart: BandChart): Band {
     filter.type = "lowpass";
     filter.Q.value = 6;
     filter.frequency.setValueAtTime(freq * 7, t);
-    filter.frequency.exponentialRampToValueAtTime(Math.max(freq * 2, 110), t + 0.16);
+    filter.frequency.exponentialRampToValueAtTime(Math.max(freq * 3, 220), t + 0.16);
 
     const gain = ctx.createGain();
     gain.gain.setValueAtTime(0.0001, t);
@@ -144,6 +149,7 @@ export function createBand(ctx: AudioContext, chart: BandChart): Band {
     for (const [type, detune, level] of [
       ["triangle", 0, 1],
       ["sine", -1200, 0.8],
+      ["triangle", 1200, 0.4],
     ] as const) {
       const osc = ctx.createOscillator();
       osc.type = type;
@@ -174,8 +180,129 @@ export function createBand(ctx: AudioContext, chart: BandChart): Band {
     track({ gain: pluckGain, sources: [pluck] });
   }
 
+  /**
+   * Rhythm guitar: a short, dull chunk on every beat. Kept quiet and brief so
+   * it is felt as time and harmony without sitting on the learner's left hand.
+   */
+  function guitar(t: number, notes: readonly Midi[], level: number) {
+    const filter = ctx.createBiquadFilter();
+    filter.type = "lowpass";
+    filter.Q.value = 1.5;
+    filter.frequency.setValueAtTime(2400, t);
+    filter.frequency.exponentialRampToValueAtTime(700, t + 0.12);
+
+    const gain = ctx.createGain();
+    gain.gain.setValueAtTime(0.0001, t);
+    gain.gain.exponentialRampToValueAtTime(level, t + 0.006);
+    gain.gain.exponentialRampToValueAtTime(0.0001, t + 0.2);
+    filter.connect(gain).connect(master);
+
+    const sources: AudioScheduledSourceNode[] = [];
+    notes.forEach((note, i) => {
+      const osc = ctx.createOscillator();
+      osc.type = "sawtooth";
+      osc.frequency.value = midiToFreq(note);
+      // The pick crosses the strings: each one a few milliseconds later.
+      osc.start(t + i * 0.006);
+      osc.stop(t + 0.24);
+      osc.connect(filter);
+      sources.push(osc);
+    });
+    track({ gain, sources });
+  }
+
+  /** Snare, brushed: the body of the drum under a burst of wire. */
+  function snare(t: number, level: number) {
+    hit(t, { level, decay: 0.13, type: "bandpass", freq: 2600, q: 0.6 });
+    hit(t, { level: level * 0.7, decay: 0.09, type: "bandpass", freq: 240, q: 2 });
+  }
+
+  /** Crash cymbal, for the top of the form. */
+  function crash(t: number) {
+    hit(t, { level: 0.11, decay: 1.6, type: "highpass", freq: 5200 });
+  }
+
+  /**
+   * Vibraphone: a sine with a quick bright partial two octaves up for the
+   * mallet, ringing away under the slow tremolo of the motor.
+   */
+  function vibes(t: number, notes: readonly Midi[], dur: number) {
+    const ring = Math.max(dur, 1.2);
+    const gain = ctx.createGain();
+    gain.gain.setValueAtTime(0.0001, t);
+    gain.gain.exponentialRampToValueAtTime(0.085, t + 0.005);
+    gain.gain.exponentialRampToValueAtTime(0.0001, t + ring);
+
+    const tremolo = ctx.createGain();
+    tremolo.gain.value = 0.8;
+    const motor = ctx.createOscillator();
+    motor.frequency.value = 5;
+    const depth = ctx.createGain();
+    depth.gain.value = 0.2;
+    motor.connect(depth).connect(tremolo.gain);
+    gain.connect(tremolo).connect(master);
+
+    const sources: AudioScheduledSourceNode[] = [motor];
+    for (const note of notes) {
+      for (const [ratio, level, decay] of [
+        [1, 1, ring],
+        [4, 0.3, 0.25],
+      ] as const) {
+        const osc = ctx.createOscillator();
+        osc.type = "sine";
+        osc.frequency.value = midiToFreq(note) * ratio;
+        const g = ctx.createGain();
+        g.gain.setValueAtTime(level, t);
+        g.gain.exponentialRampToValueAtTime(0.0001, t + decay);
+        osc.connect(g).connect(gain);
+        osc.start(t);
+        osc.stop(t + ring + 0.05);
+        sources.push(osc);
+      }
+    }
+    motor.start(t);
+    motor.stop(t + ring + 0.05);
+    track({ gain, sources });
+  }
+
+  /**
+   * Horn section: two detuned saws a note, behind a lowpass that opens as the
+   * note swells, which is most of what makes a saw sound like brass.
+   */
+  function horns(t: number, notes: readonly Midi[], dur: number) {
+    const attack = Math.min(0.07, dur / 3);
+    const filter = ctx.createBiquadFilter();
+    filter.type = "lowpass";
+    filter.Q.value = 1.2;
+    filter.frequency.setValueAtTime(500, t);
+    filter.frequency.linearRampToValueAtTime(1900, t + attack);
+    filter.frequency.linearRampToValueAtTime(1200, t + dur);
+
+    const gain = ctx.createGain();
+    gain.gain.setValueAtTime(0.0001, t);
+    gain.gain.exponentialRampToValueAtTime(0.05, t + attack);
+    gain.gain.setValueAtTime(0.05, t + Math.max(attack, dur - 0.08));
+    gain.gain.exponentialRampToValueAtTime(0.0001, t + dur);
+    filter.connect(gain).connect(master);
+
+    const sources: AudioScheduledSourceNode[] = [];
+    for (const note of notes) {
+      for (const detune of [-6, 6]) {
+        const osc = ctx.createOscillator();
+        osc.type = "sawtooth";
+        osc.frequency.value = midiToFreq(note);
+        osc.detune.value = detune;
+        osc.connect(filter);
+        osc.start(t);
+        osc.stop(t + dur + 0.05);
+        sources.push(osc);
+      }
+    }
+    track({ gain, sources });
+  }
+
   return {
-    schedule({ t0, bpm }) {
+    schedule({ t0, bpm, until = Infinity }) {
       const spb = 60 / bpm;
       const now = ctx.currentTime;
 
@@ -184,6 +311,7 @@ export function createBand(ctx: AudioContext, chart: BandChart): Band {
         // A beat that has already gone by is not worth catching up on, and
         // scheduling into the past would fire it immediately, out of time.
         if (t < now - 0.005) continue;
+        if (t >= until - 0.005) break;
 
         const posInBar = i % chart.beatsPerBar;
         const downbeat = posInBar === 0;
@@ -193,12 +321,35 @@ export function createBand(ctx: AudioContext, chart: BandChart): Band {
         const note = chart.bass[i];
         if (note !== null) bass(t, note, spb * 0.92);
 
+        const chord = chart.comp?.[i];
+        if (chord) guitar(t, chord, backbeat ? 0.1 : 0.07);
+
         ride(t, downbeat ? 0.1 : 0.075, downbeat ? 0.5 : 0.4);
         if (backbeat) {
           ride(t + SWING * spb, 0.05, 0.26);
           hat(t);
         }
         if (downbeat) kick(t);
+
+        if (!chart.ensemble) continue;
+        if (i === 0) crash(t);
+        // A triplet on the snare into every fifth bar: the phrase turns over
+        // and the vibes and the horns change places.
+        const bar = Math.floor(i / chart.beatsPerBar);
+        if (bar % 4 === 3 && posInBar === chart.beatsPerBar - 1) {
+          [0.05, 0.07, 0.1].forEach((level, k) => snare(t + (k * spb) / 3, level));
+        }
+      }
+
+      for (const [play, hits] of [
+        [vibes, chart.ensemble?.vibes ?? []],
+        [horns, chart.ensemble?.horns ?? []],
+      ] as const) {
+        for (const h of hits) {
+          const t = t0 + (chart.startBeat + h.beat) * spb;
+          if (t < now - 0.005 || t >= until - 0.005) continue;
+          play(t, h.notes, Math.min(h.beats * spb, until - t));
+        }
       }
     },
 

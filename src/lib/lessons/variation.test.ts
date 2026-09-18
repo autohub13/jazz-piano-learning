@@ -11,7 +11,8 @@ function every(): Variation[] {
   for (const voicing of CHOICES.voicing)
     for (const reharm of CHOICES.reharm)
       for (const melody of CHOICES.melody)
-        for (const rhythm of CHOICES.rhythm) out.push({ voicing, reharm, melody, rhythm });
+        for (const rhythm of CHOICES.rhythm)
+          for (const texture of CHOICES.texture) out.push({ voicing, reharm, melody, rhythm, texture });
   return out;
 }
 
@@ -85,7 +86,7 @@ describe("applyVariation", () => {
 
 describe("parseVariation", () => {
   it("round trips and forgives junk", () => {
-    const v: Variation = { voicing: "rootless", reharm: "tritone", melody: "written", rhythm: "charleston" };
+    const v: Variation = { voicing: "rootless", reharm: "tritone", melody: "written", rhythm: "charleston", texture: "melodyTop" };
     expect(parseVariation(formatVariation(v))).toEqual(v);
     expect(parseVariation("nonsense.x")).toEqual(AS_WRITTEN);
     expect(parseVariation(null)).toEqual(AS_WRITTEN);

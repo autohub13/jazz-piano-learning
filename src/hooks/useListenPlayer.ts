@@ -32,6 +32,8 @@ export interface ListenPlayer {
   play(): void;
   pause(): void;
   restart(): void;
+  /** Play from one beat to another and stop there, or go round it on loop. */
+  playBar(fromBeat: number, toBeat: number): void;
   /** Back to idle: silence, no clock, nothing scheduled. */
   stop(): void;
   toggleLoop(): void;
@@ -80,6 +82,8 @@ export function useListenPlayer(
   statusRef.current = status;
   const silentRef = useRef(silent);
   silentRef.current = silent;
+  // The bar being played on its own, in beats, or null for the whole piece.
+  const rangeRef = useRef<{ from: number; to: number } | null>(null);
 
   useEffect(() => {
     if (!engine || !chart) return;
@@ -108,8 +112,10 @@ export function useListenPlayer(
     (t0: number, fromSec: number) => {
       if (!engine) return;
       const { timed, totalSec } = buildTimeline(steps, bpm);
+      const range = rangeRef.current;
+      const stopSec = range ? Math.min(totalSec, (range.to * 60) / bpm) : totalSec;
       timelineRef.current = timed;
-      totalSecRef.current = totalSec;
+      totalSecRef.current = stopSec;
       t0Ref.current = t0;
 
       // Only a note that really is in the step before can carry on from it.
@@ -127,6 +133,7 @@ export function useListenPlayer(
       for (let i = 0; i < timed.length && !silentRef.current; i++) {
         const s = timed[i];
         if (s.endSec <= fromSec) continue;
+        if (s.startSec >= stopSec - 1e-6) break;
         const first = s.startSec <= fromSec;
         for (const note of s.notes) {
           if (!first && tiedAt(i, note)) continue;
@@ -137,7 +144,7 @@ export function useListenPlayer(
           engine.start({
             note,
             time: start,
-            duration: Math.max(0.05, t0 + timed[last].endSec - start - tail),
+            duration: Math.max(0.05, t0 + Math.min(timed[last].endSec - tail, stopSec) - start),
             velocity: 82,
           });
         }
@@ -145,7 +152,7 @@ export function useListenPlayer(
 
       // Same t0, same clock. The band skips any beat already behind us, so
       // this is also how it joins a pass that is already under way.
-      if (bandOnRef.current) bandRef.current?.schedule({ t0, bpm });
+      if (bandOnRef.current) bandRef.current?.schedule({ t0, bpm, until: t0 + stopSec });
     },
     [engine, steps, bpm],
   );
@@ -156,7 +163,8 @@ export function useListenPlayer(
   const scheduleFrom = useCallback(
     (fromIndex: number, at?: number) => {
       if (!engine) return;
-      const offset = buildTimeline(steps, bpm).timed[fromIndex]?.startSec ?? 0;
+      const start = buildTimeline(steps, bpm).timed[fromIndex]?.startSec ?? 0;
+      const offset = Math.max(start, ((rangeRef.current?.from ?? 0) * 60) / bpm);
       schedulePass((at ?? engine.now() + LEAD_IN) - offset, offset);
     },
     [engine, steps, bpm, schedulePass],
@@ -220,6 +228,7 @@ export function useListenPlayer(
       startLoop();
       return;
     }
+    rangeRef.current = null;
     engine.stop();
     stopBand();
     void engine.resume();
@@ -242,6 +251,7 @@ export function useListenPlayer(
 
   const restart = useCallback(() => {
     if (!engine) return;
+    rangeRef.current = null;
     engine.stop();
     stopBand();
     void engine.resume();
@@ -251,6 +261,22 @@ export function useListenPlayer(
     setStatus("playing");
     startLoop();
   }, [engine, scheduleFrom, startLoop, stopBand]);
+
+  const playBar = useCallback(
+    (fromBeat: number, toBeat: number) => {
+      if (!engine) return;
+      rangeRef.current = { from: fromBeat, to: toBeat };
+      engine.stop();
+      stopBand();
+      void engine.resume();
+      lastIndexRef.current = -1;
+      setActiveIndex(-1);
+      scheduleFrom(0);
+      setStatus("playing");
+      startLoop();
+    },
+    [engine, scheduleFrom, startLoop, stopBand],
+  );
 
   const stop = useCallback(() => {
     cancelRaf();
@@ -306,7 +332,7 @@ export function useListenPlayer(
     prevBandOn.current = bandOn;
     stopBand();
     if (bandOn && statusRef.current === "playing") {
-      bandRef.current?.schedule({ t0: t0Ref.current, bpm });
+      bandRef.current?.schedule({ t0: t0Ref.current, bpm, until: t0Ref.current + totalSecRef.current });
     }
   }, [bandOn, bpm, stopBand]);
 
@@ -337,5 +363,5 @@ export function useListenPlayer(
 
   useEffect(() => cancelRaf, [cancelRaf]);
 
-  return { status, activeIndex, loop, play, pause, restart, stop, toggleLoop, position };
+  return { status, activeIndex, loop, play, pause, restart, playBar, stop, toggleLoop, position };
 }

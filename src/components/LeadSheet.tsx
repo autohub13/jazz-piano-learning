@@ -34,7 +34,7 @@ export function barsOf(lesson: Lesson): { bars: Bar[]; barOfStep: number[] } {
   return { bars, barOfStep: starts.map((s) => Math.max(0, barAt(s))) };
 }
 
-function LeadSheetImpl({ lesson, activeIndex }: { lesson: Lesson; activeIndex: number }) {
+function LeadSheetImpl({ lesson, activeIndex, onBar }: { lesson: Lesson; activeIndex: number; onBar?: (bar: number) => void }) {
   const { bars, barOfStep } = useMemo(() => barsOf(lesson), [lesson]);
   const active = activeIndex >= 0 ? barOfStep[activeIndex] : -1;
   return (
@@ -42,7 +42,18 @@ function LeadSheetImpl({ lesson, activeIndex }: { lesson: Lesson; activeIndex: n
       {bars.map((bar) => (
         <li
           key={bar.index}
-          className={cn("leadsheet__bar", bar.index === active && "is-active", bar.pickup && "is-pickup")}
+          className={cn("leadsheet__bar", bar.index === active && "is-active", bar.pickup && "is-pickup", onBar && "is-playable")}
+          role={onBar ? "button" : undefined}
+          tabIndex={onBar ? 0 : undefined}
+          onClick={onBar && (() => onBar(bar.index))}
+          onKeyDown={
+            onBar &&
+            ((e) => {
+              if (e.key !== "Enter" && e.key !== " ") return;
+              e.preventDefault();
+              onBar(bar.index);
+            })
+          }
         >
           {bar.symbols.length === 0 ? (
             <span className="leadsheet__repeat">{bar.pickup ? "" : "%"}</span>

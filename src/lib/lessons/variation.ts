@@ -9,6 +9,7 @@ import {
   type MelodyChoice,
   type NoteEvent,
   type RhythmChoice,
+  type TextureChoice,
   type Variation,
   type VoicingChoice,
 } from "@/lib/arrange/arrange";
@@ -16,13 +17,14 @@ import type { Reharm } from "./reharm";
 import type { ChartChord } from "./reharm";
 import type { Hand, HarmonyRegion, Lesson } from "./types";
 
-export type { Variation, VoicingChoice, MelodyChoice, RhythmChoice };
+export type { Variation, VoicingChoice, MelodyChoice, RhythmChoice, TextureChoice };
 
 export const CHOICES: { [K in keyof Variation]: readonly Variation[K][] } = {
   voicing: ["written", "shell", "rootless", "drop2", "quartal"],
   reharm: ["written", "tritone", "secondary", "passingDim"] satisfies readonly Reharm[],
   melody: ["written", "arpeggio", "enclosure", "scaleRun"],
-  rhythm: ["written", "held", "charleston", "anticipate"],
+  rhythm: ["written", "held", "charleston", "anticipate", "fill"],
+  texture: ["written", "melodyTop", "stride", "solo"],
 };
 
 export const AS_WRITTEN: Variation = {
@@ -30,15 +32,16 @@ export const AS_WRITTEN: Variation = {
   reharm: "written",
   melody: "written",
   rhythm: "written",
+  texture: "written",
 };
 
-const AXES = ["voicing", "reharm", "melody", "rhythm"] as const;
+const AXES = ["voicing", "reharm", "melody", "rhythm", "texture"] as const;
 
 export function isWritten(v: Variation): boolean {
   return AXES.every((axis) => v[axis] === "written");
 }
 
-/** "rootless.tritone.written.charleston" from the URL, forgiving anything unknown. */
+/** "rootless.tritone.written.charleston.stride" from the URL, forgiving anything unknown. */
 export function parseVariation(raw: string | null): Variation {
   const parts = raw?.split(".") ?? [];
   const pick = <K extends keyof Variation>(axis: K, i: number): Variation[K] => {
@@ -50,6 +53,7 @@ export function parseVariation(raw: string | null): Variation {
     reharm: pick("reharm", 1),
     melody: pick("melody", 2),
     rhythm: pick("rhythm", 3),
+    texture: pick("texture", 4),
   };
 }
 

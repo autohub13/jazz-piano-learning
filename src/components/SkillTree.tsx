@@ -25,7 +25,7 @@ function Card({ exercise, store, dev }: { exercise: Exercise; store: ProgressSto
   const next = keys.find((k) => !done.has(k)) ?? keys[0];
   const body = (
     <>
-      <span className="card__kind">{KIND[exercise.kind]}</span>
+      <span className="card__kind">{exercise.etude ? "Etude" : KIND[exercise.kind]}</span>
       <span className="card__title">{exercise.title}</span>
       <span className="card__blurb">{exercise.blurb}</span>
       <span className="card__keys" aria-label={`${done.size} of ${keys.length} keys done`}>

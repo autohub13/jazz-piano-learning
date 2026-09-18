@@ -1484,8 +1484,123 @@ button.theory__chip:hover {
   opacity: 0.7;
 }
 
+.leadsheet__bar.is-playable {
+  cursor: pointer;
+}
+
+.leadsheet__bar.is-playable:hover {
+  background: hsl(var(--muted) / 0.5);
+}
+
+.leadsheet__bar.is-playable:focus-visible {
+  outline: 2px solid hsl(var(--primary));
+  outline-offset: -2px;
+}
+
 .leadsheet__repeat {
   color: hsl(var(--muted-foreground));
+}
+
+/* Sheet music */
+
+.sheet {
+  display: grid;
+  gap: 0.25rem;
+  padding: 0.5rem 0.75rem;
+  border: 1px solid hsl(var(--border));
+  border-radius: var(--radius);
+  background: hsl(var(--card));
+  color: hsl(var(--foreground));
+}
+
+.sheet__row {
+  display: block;
+  width: 100%;
+  height: auto;
+}
+
+.sheet__line,
+.sheet__barline {
+  stroke: hsl(var(--muted-foreground) / 0.55);
+  stroke-width: 1;
+}
+
+.sheet__barline.is-pickup {
+  stroke-dasharray: 3 3;
+}
+
+.sheet__now {
+  fill: hsl(38 60% 18%);
+}
+
+.sheet__hit {
+  fill: transparent;
+  cursor: pointer;
+  pointer-events: all;
+}
+
+.sheet__hit:hover {
+  fill: hsl(var(--muted-foreground) / 0.08);
+}
+
+.sheet__hit:focus-visible {
+  outline: none;
+  stroke: hsl(var(--primary));
+  stroke-width: 2;
+}
+
+.sheet__clef {
+  fill: hsl(var(--muted-foreground));
+  font-family: "Noto Music", "Segoe UI Symbol", "Apple Symbols", serif;
+  font-size: 70px;
+}
+
+.sheet__chord {
+  fill: hsl(var(--primary));
+  font-family: var(--font-display);
+  font-size: 17px;
+}
+
+.sheet__note {
+  color: hsl(var(--foreground));
+}
+
+.sheet__note.is-active {
+  color: hsl(var(--primary));
+}
+
+.sheet__head,
+.sheet__dot,
+.sheet__rest {
+  fill: currentColor;
+}
+
+.sheet__rest {
+  color: hsl(var(--muted-foreground));
+}
+
+.sheet__head.is-hollow {
+  fill: hsl(var(--card));
+  stroke: currentColor;
+  stroke-width: 1.8;
+}
+
+.sheet__stem,
+.sheet__flag,
+.sheet__tie {
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 1.5;
+}
+
+.sheet__tie {
+  stroke: hsl(var(--muted-foreground));
+}
+
+.sheet__sign {
+  fill: currentColor;
+  font-family: "Noto Music", "Segoe UI Symbol", "Apple Symbols", serif;
+  font-size: 23px;
 }
 
 /* Improv meter */

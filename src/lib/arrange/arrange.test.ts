@@ -89,3 +89,75 @@ describe("bassLine", () => {
     }
   });
 });
+
+describe("hand textures", () => {
+  const saints = tunes.find((t) => t.slug === "when-the-saints")!;
+  const blues = tunes.find((t) => t.slug === "f-blues")!;
+  const shell = levelVariation(2);
+
+  /** Each step with its start in beats, its chord, and what each hand strikes. */
+  function walk(lesson: ReturnType<typeof arrangeTune>) {
+    let t = 0;
+    return lesson.steps.map((step, i) => {
+      const region = [...lesson.harmony!].reverse().find((r) => r.fromStep <= i) ?? lesson.harmony![0];
+      const pick = (hand: "left" | "right", struck: boolean) =>
+        step.notes.filter((_, j) => step.hands?.[j] === hand && (!struck || !step.tied?.[j]));
+      const out = {
+        start: t,
+        chord: parseChord(region.symbol),
+        regionStart: region.fromStep === i,
+        left: pick("left", false),
+        right: pick("right", false),
+        leftStruck: pick("left", true),
+        rightStruck: pick("right", true),
+      };
+      t += step.beats;
+      return out;
+    });
+  }
+
+  it("melody on top: root in the left hand, a close chord tone inversion under the tune", () => {
+    for (const key of KEYS) {
+      const lesson = arrangeTune(saints, key, { ...shell, texture: "melodyTop" });
+      const pickup = lesson.band!.startBeat;
+      let blocks = 0;
+      for (const s of walk(lesson)) {
+        expect(s.left.length).toBeLessThanOrEqual(1);
+        if (s.start < pickup) expect(s.right).toHaveLength(1);
+        if (s.left.length) expect(s.left[0] % 12).toBe(s.chord.rootPc);
+        if (s.rightStruck.length > 1) {
+          blocks++;
+          expect(s.rightStruck).toHaveLength(4);
+          expect(Math.max(...s.rightStruck) - Math.min(...s.rightStruck)).toBeLessThan(12);
+          const d = s.chord.degrees;
+          const tones = [d.R, d[3], d[5], d[7]].map((x) => (s.chord.rootPc + x) % 12);
+          for (const n of s.rightStruck) expect(tones).toContain(n % 12);
+        }
+      }
+      expect(blocks).toBeGreaterThan(10);
+    }
+  });
+
+  it("in the gaps: the left hand plays on a change or where the tune starts nothing", () => {
+    for (const key of KEYS) {
+      const lesson = arrangeTune(blues, key, { ...shell, rhythm: "fill" });
+      for (const s of walk(lesson)) {
+        if (s.leftStruck.length && !s.regionStart) expect(s.rightStruck).toHaveLength(0);
+      }
+    }
+  });
+
+  it("stride: bass on one and three, root on one, chord on two and four", () => {
+    for (const key of KEYS) {
+      const lesson = arrangeTune(saints, key, { ...shell, texture: "stride" });
+      const pickup = lesson.band!.startBeat;
+      for (const s of walk(lesson)) {
+        if (s.start < pickup || !Number.isInteger(s.start)) continue;
+        const beat = (s.start - pickup) % 4;
+        expect(s.leftStruck.length, `${key} ${s.start}`).toBe(beat % 2 === 0 ? 1 : s.leftStruck.length);
+        if (beat % 2 === 1) expect(s.leftStruck.length).toBeGreaterThanOrEqual(2);
+        if (beat === 0) expect(s.leftStruck[0] % 12).toBe(s.chord.rootPc);
+      }
+    }
+  });
+});

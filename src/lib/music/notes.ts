@@ -33,6 +33,31 @@ export function pitchClassName(midi: Midi, spelling: Spelling): string {
   return table[pitchClass(midi)];
 }
 
+const LETTERS = "CDEFGAB";
+/** Letter-correct names that read as a white key to anyone not doing theory. */
+const WHITE_ENHARMONIC = new Set(["Fb", "Cb", "E#", "B#"]);
+
+/**
+ * A pitch class written on a given letter (0 is C, 6 is B), so the flat 3rd of
+ * C is Eb whatever the surrounding key reads in. Anything that would need a
+ * double accidental falls back to the plain spelling.
+ */
+export function spellOnLetter(letter: number, pc: number, fallback: Spelling): string {
+  const l = ((letter % 7) + 7) % 7;
+  let diff = pitchClass(pc - LETTER_SEMITONE[LETTERS[l]]);
+  if (diff > 6) diff -= 12;
+  if (diff === 0) return LETTERS[l];
+  const name = diff === 1 ? `${LETTERS[l]}#` : diff === -1 ? `${LETTERS[l]}b` : null;
+  // Fb is the E key under the finger. Say the plain name, as transpose does.
+  if (name && !WHITE_ENHARMONIC.has(name)) return name;
+  return pitchClassName(pc, fallback);
+}
+
+/** Index of a name's letter, 0 for C to 6 for B. */
+export function letterIndex(name: string): number {
+  return LETTERS.indexOf(name[0].toUpperCase());
+}
+
 export function midiToName(midi: Midi, spelling: Spelling): string {
   return `${pitchClassName(midi, spelling)}${octaveOf(midi)}`;
 }

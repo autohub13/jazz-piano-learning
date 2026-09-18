@@ -13,7 +13,7 @@ import { TheoryPanel, findRegion } from "./TheoryPanel";
 import { HandLegend } from "./HandLegend";
 import { KeyPicker } from "./KeyPicker";
 import { VariationPicker } from "./VariationPicker";
-import { LeadSheet } from "./LeadSheet";
+import { SheetMusic } from "./SheetMusic";
 import { ImprovMeter } from "./ImprovMeter";
 import { useAudioEngine } from "@/hooks/useAudioEngine";
 import { useComputerKeyboard } from "@/hooks/useComputerKeyboard";
@@ -27,6 +27,7 @@ import { useTimedSession } from "@/hooks/useTimedSession";
 import type { Exercise } from "@/lib/curriculum/types";
 import { freshNotes } from "@/lib/grading/timed";
 import { handMap, handsUsed } from "@/lib/lessons/hands";
+import { barBeats } from "@/lib/lessons/notation";
 import { parseKey, type KeyName } from "@/lib/lessons/transpose";
 import { applyVariation, formatVariation, parseVariation, type Variation } from "@/lib/lessons/variation";
 import { isChordTone, parseChord } from "@/lib/music/chords";
@@ -220,6 +221,19 @@ export default function PracticeWorkspace({ exercise }: { exercise: Exercise }) 
   useComputerKeyboard({ base, enabled: ready, onNoteDown: noteDown, onNoteUp: noteUp, onBaseChange: setBase });
   const midi = useMidiInput({ enabled: ready, onNoteDown: noteDown, onNoteUp: noteUp });
 
+  // In Listen, a bar of the score is a button that plays just that bar.
+  const bars = useMemo(() => barBeats(lesson), [lesson]);
+  const { playBar } = listen;
+  const onBar = useCallback(
+    (bar: number) => {
+      if (bars[bar + 1] === undefined) return;
+      setStudying(null);
+      setVerdict(null);
+      playBar(bars[bar], bars[bar + 1]);
+    },
+    [bars, playBar],
+  );
+
   const studyRegion = mode === "listen" && studying !== null ? lesson.harmony?.[studying] ?? null : null;
 
   const activeIndex =
@@ -394,7 +408,7 @@ export default function PracticeWorkspace({ exercise }: { exercise: Exercise }) 
           : "awaiting";
 
   const running = listen.status === "playing";
-  const showsChart = !!lesson.harmony && exercise.kind !== "ear";
+  const showsChart = exercise.kind !== "ear";
 
   return (
     <div className="workspace">
@@ -545,7 +559,7 @@ export default function PracticeWorkspace({ exercise }: { exercise: Exercise }) 
         <StepStrip steps={lesson.steps} activeIndex={activeIndex} completed={mode === "practice" ? practice.results.length : mode === "timed" ? timed.results.length : mode === "ear" ? ear.results.length : 0} />
       )}
 
-      {showsChart && <LeadSheet lesson={lesson} activeIndex={activeIndex} />}
+      {showsChart && <SheetMusic lesson={lesson} activeIndex={activeIndex} onBar={mode === "listen" ? onBar : undefined} />}
 
       <PianoKeyboard low={lesson.range.low} high={lesson.range.high} spelling={lesson.spelling} labelMode={labelMode} highlights={highlights} fingering={fingering} degrees={degrees} hands={hands} onNoteDown={noteDown} onNoteUp={noteUp} />
 

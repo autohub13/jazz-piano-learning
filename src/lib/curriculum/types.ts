@@ -20,6 +20,8 @@ export interface Exercise {
   /** The skill tree node this belongs to. */
   unit: string;
   blurb: string;
+  /** What to listen for, in degrees and numerals so it holds in every key. */
+  teachingPoints: string[];
   /** Which keys count towards mastery. "all" is the twelve. */
   keys: "all" | readonly KeyName[];
   /** Pure. The same key always gives the same lesson. */
@@ -32,6 +34,8 @@ export interface Exercise {
   minutes: number;
   /** The library tune this is built on, if any. */
   tune?: string;
+  /** The unit's own piece: its theory as a tune, with the full band. */
+  etude?: boolean;
 }
 
 export interface Unit {
