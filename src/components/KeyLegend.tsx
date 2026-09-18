@@ -1,5 +1,6 @@
 "use client";
 
+import type { MidiInputState } from "@/hooks/useMidiInput";
 import { KEY_SPAN } from "@/lib/music/computerKeys";
 import { midiToName, type Midi, type Spelling } from "@/lib/music/notes";
 import type { LabelMode } from "./PianoKeyboard";
@@ -14,18 +15,28 @@ const UPPER = [
   ["R", "F"], ["5", "F#"], ["T", "G"], ["6", "G#"], ["Y", "A"], ["7", "A#"], ["U", "B"],
 ];
 
+const MIDI_TEXT: Record<MidiInputState["status"], (name: string | null) => string> = {
+  connected: (name) => `MIDI keyboard connected: ${name}.`,
+  "no-device": () => "No MIDI keyboard found. Plug one in and it is picked up straight away.",
+  requesting: () => "Asking the browser for MIDI access. Allow it to play from a MIDI keyboard.",
+  denied: () => "MIDI access was blocked, so only the mouse and computer keys play.",
+  unsupported: () => "This browser has no MIDI support. Chrome and Edge do.",
+};
+
 export function KeyLegend({
   base,
   spelling,
   labelMode,
   onLabelMode,
   engineKind,
+  midi,
 }: {
   base: Midi;
   spelling: Spelling;
   labelMode: LabelMode;
   onLabelMode(mode: LabelMode): void;
   engineKind: "sampled" | "synth";
+  midi: MidiInputState;
 }) {
   return (
     <div className="legend">
@@ -49,6 +60,9 @@ export function KeyLegend({
       </div>
 
       <div className="legend__meta">
+        <span className={cn("legend__midi", midi.status === "connected" && "is-on")}>
+          {MIDI_TEXT[midi.status](midi.deviceName)}
+        </span>
         <span>
           Typing plays {midiToName(base, spelling)} to {midiToName(base + KEY_SPAN, spelling)}.
           Arrow up and down shift the octave.

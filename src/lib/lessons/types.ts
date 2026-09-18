@@ -32,6 +32,10 @@ export interface LessonStep {
    *  Wins over `hand`. A shell under a melody note cannot be described by a
    *  single hand, which is why this exists. */
   hands?: Hand[];
+  /** Per note, index aligned with `notes`: true when the note carries on from
+   *  the step before rather than being struck again. Generated variations use
+   *  it to hold a chord under a moving tune. */
+  tied?: boolean[];
 }
 
 /**
