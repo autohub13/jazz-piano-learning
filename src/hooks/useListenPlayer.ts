@@ -17,6 +17,7 @@ import { createBand, type Band } from "@/lib/audio/band";
 import type { PianoEngine } from "@/lib/audio/pianoEngine";
 import { buildTimeline, type TimedStep } from "@/lib/lessons/timeline";
 import type { BandChart, LessonStep } from "@/lib/lessons/types";
+import type { Midi } from "@/lib/music/notes";
 
 export type ListenStatus = "idle" | "playing" | "paused" | "finished";
 
@@ -31,7 +32,13 @@ export interface ListenPlayer {
   play(): void;
   pause(): void;
   restart(): void;
+  /** Play from one beat to another and stop there, or go round it on loop. */
+  playBar(fromBeat: number, toBeat: number): void;
+  /** Back to idle: silence, no clock, nothing scheduled. */
+  stop(): void;
   toggleLoop(): void;
+  /** Seconds into the current pass, or null when nothing is running. */
+  position(): number | null;
 }
 
 export interface ListenOptions {
@@ -40,6 +47,9 @@ export interface ListenOptions {
   chart?: BandChart | null;
   /** Whether the band is currently switched on. */
   bandOn?: boolean;
+  /** Band and clock only: the piano part is not sounded. Timed practice and
+   *  improvising run on this, with the learner supplying the piano. */
+  silent?: boolean;
 }
 
 export function useListenPlayer(
@@ -47,7 +57,7 @@ export function useListenPlayer(
   steps: LessonStep[],
   bpm: number,
   enabled: boolean,
-  { initialLoop = false, chart = null, bandOn = true }: ListenOptions = {},
+  { initialLoop = false, chart = null, bandOn = true, silent = false }: ListenOptions = {},
 ): ListenPlayer {
   const [status, setStatus] = useState<ListenStatus>("idle");
   const [activeIndex, setActiveIndex] = useState(-1);
@@ -70,10 +80,14 @@ export function useListenPlayer(
   bandOnRef.current = bandOn;
   const statusRef = useRef(status);
   statusRef.current = status;
+  const silentRef = useRef(silent);
+  silentRef.current = silent;
+  // The bar being played on its own, in beats, or null for the whole piece.
+  const rangeRef = useRef<{ from: number; to: number } | null>(null);
 
   useEffect(() => {
     if (!engine || !chart) return;
-    const band = createBand(engine.ctx, chart);
+    const band = createBand(engine.ctx, chart, engine.output);
     bandRef.current = band;
     return () => {
       band.dispose();
@@ -90,42 +104,81 @@ export function useListenPlayer(
     }
   }, []);
 
-  // `at` is an absolute AudioContext time for the first step. Looping passes
-  // the exact end of the previous pass so the seam lands on the grid instead
-  // of a lead-in later.
-  const scheduleFrom = useCallback(
-    (fromIndex: number, at?: number) => {
+  // Schedules the pass that started at `t0`, from `fromSec` into it. A note
+  // tied over from the step before is struck once, where its chain begins, and
+  // held to where the chain ends. Starting part way through a step strikes
+  // whatever that step has sounding, so the music can pick up anywhere.
+  const schedulePass = useCallback(
+    (t0: number, fromSec: number) => {
       if (!engine) return;
       const { timed, totalSec } = buildTimeline(steps, bpm);
+      const range = rangeRef.current;
+      const stopSec = range ? Math.min(totalSec, (range.to * 60) / bpm) : totalSec;
       timelineRef.current = timed;
-      totalSecRef.current = totalSec;
-
-      const offset = timed[fromIndex]?.startSec ?? 0;
-      const t0 = (at ?? engine.now() + LEAD_IN) - offset;
+      totalSecRef.current = stopSec;
       t0Ref.current = t0;
+
+      // Only a note that really is in the step before can carry on from it.
+      const tiedAt = (k: number, note: Midi) => {
+        const step = steps[k];
+        const j = step?.notes.indexOf(note) ?? -1;
+        return j >= 0 && step.tied?.[j] === true && steps[k - 1]?.notes.includes(note) === true;
+      };
 
       // Beginner lessons are under a hundred steps and under two minutes, so
       // scheduling the whole thing in one pass is exact and simple. A rolling
       // look-ahead scheduler only earns its complexity with long or looping
       // content.
-      for (let i = fromIndex; i < timed.length; i++) {
+      const earliest = engine.now() + 0.02;
+      for (let i = 0; i < timed.length && !silentRef.current; i++) {
         const s = timed[i];
+        if (s.endSec <= fromSec) continue;
+        if (s.startSec >= stopSec - 1e-6) break;
+        const first = s.startSec <= fromSec;
+        // Voiced as a pianist would: the top note sings and what is under it
+        // sits back. The two velocities also land on different sample layers,
+        // so the tune is brighter than the chord and not only louder.
+        const top = Math.max(...s.notes);
         for (const note of s.notes) {
+          if (!first && tiedAt(i, note)) continue;
+          let last = i;
+          while (last + 1 < timed.length && tiedAt(last + 1, note)) last++;
+          const start = Math.max(t0 + s.startSec, earliest);
+          const tail = (timed[last].endSec - timed[last].startSec) * 0.05;
           engine.start({
             note,
-            time: t0 + s.startSec,
-            duration: (s.endSec - s.startSec) * 0.95,
-            velocity: 82,
+            time: start,
+            duration: Math.max(0.05, t0 + Math.min(timed[last].endSec - tail, stopSec) - start),
+            velocity: note === top ? 90 : 72,
           });
         }
       }
 
       // Same t0, same clock. The band skips any beat already behind us, so
       // this is also how it joins a pass that is already under way.
-      if (bandOnRef.current) bandRef.current?.schedule({ t0, bpm });
+      if (bandOnRef.current) bandRef.current?.schedule({ t0, bpm, until: t0 + stopSec });
     },
     [engine, steps, bpm],
   );
+
+  // `at` is an absolute AudioContext time for the first step. Looping passes
+  // the exact end of the previous pass so the seam lands on the grid instead
+  // of a lead-in later.
+  const scheduleFrom = useCallback(
+    (fromIndex: number, at?: number) => {
+      if (!engine) return;
+      const start = buildTimeline(steps, bpm).timed[fromIndex]?.startSec ?? 0;
+      const offset = Math.max(start, ((rangeRef.current?.from ?? 0) * 60) / bpm);
+      schedulePass((at ?? engine.now() + LEAD_IN) - offset, offset);
+    },
+    [engine, steps, bpm, schedulePass],
+  );
+
+  // The rAF loop keeps calling the tick it started with, so the loop seam has
+  // to reach the current schedule through a ref. Otherwise a tempo or a
+  // variation changed mid-loop would revert at the next pass.
+  const scheduleRef = useRef(scheduleFrom);
+  scheduleRef.current = scheduleFrom;
 
   const tick = useCallback(() => {
     if (!engine) return;
@@ -138,7 +191,7 @@ export function useListenPlayer(
         // Seamless unless the main thread stalled long enough that the seam
         // is already well in the past, in which case fall back to a lead-in.
         const at = t0Ref.current + totalSecRef.current;
-        scheduleFrom(0, at > engine.now() - 0.25 ? at : undefined);
+        scheduleRef.current(0, at > engine.now() - 0.25 ? at : undefined);
       } else {
         cancelRaf();
         lastIndexRef.current = -1;
@@ -164,7 +217,7 @@ export function useListenPlayer(
     }
 
     rafRef.current = requestAnimationFrame(tick);
-  }, [engine, scheduleFrom, cancelRaf]);
+  }, [engine, cancelRaf]);
 
   const startLoop = useCallback(() => {
     cancelRaf();
@@ -179,6 +232,7 @@ export function useListenPlayer(
       startLoop();
       return;
     }
+    rangeRef.current = null;
     engine.stop();
     stopBand();
     void engine.resume();
@@ -201,6 +255,7 @@ export function useListenPlayer(
 
   const restart = useCallback(() => {
     if (!engine) return;
+    rangeRef.current = null;
     engine.stop();
     stopBand();
     void engine.resume();
@@ -211,7 +266,40 @@ export function useListenPlayer(
     startLoop();
   }, [engine, scheduleFrom, startLoop, stopBand]);
 
+  const playBar = useCallback(
+    (fromBeat: number, toBeat: number) => {
+      if (!engine) return;
+      rangeRef.current = { from: fromBeat, to: toBeat };
+      engine.stop();
+      stopBand();
+      void engine.resume();
+      lastIndexRef.current = -1;
+      setActiveIndex(-1);
+      scheduleFrom(0);
+      setStatus("playing");
+      startLoop();
+    },
+    [engine, scheduleFrom, startLoop, stopBand],
+  );
+
+  const stop = useCallback(() => {
+    cancelRaf();
+    lastIndexRef.current = -1;
+    setActiveIndex(-1);
+    setStatus("idle");
+    stopBand();
+    if (engine) {
+      engine.stop();
+      void engine.resume();
+    }
+  }, [engine, cancelRaf, stopBand]);
+
   const toggleLoop = useCallback(() => setLoop((v) => !v), []);
+
+  const position = useCallback(() => {
+    if (!engine || (statusRef.current !== "playing" && statusRef.current !== "paused")) return null;
+    return engine.now() - t0Ref.current;
+  }, [engine]);
 
   // A tempo change while playing means cancelling and rescheduling, which is
   // the price of one-pass scheduling. Resume from the step that is sounding.
@@ -225,6 +313,21 @@ export function useListenPlayer(
     scheduleFrom(Math.max(0, lastIndexRef.current));
   }, [bpm, status, engine, scheduleFrom, stopBand]);
 
+  // New notes for the same piece, as when a variation is picked, swap in where
+  // the music is rather than starting over. The pass keeps its t0, so the grid
+  // and the band carry on and only what is sounding changes. This has to run
+  // before the effect further down that silences a disabled player.
+  const stepsRef = useRef(steps);
+  useEffect(() => {
+    if (stepsRef.current === steps) return;
+    stepsRef.current = steps;
+    if (!engine || !enabled) return;
+    if (statusRef.current !== "playing" && statusRef.current !== "paused") return;
+    engine.stop();
+    stopBand();
+    schedulePass(t0Ref.current, Math.max(0, engine.now() - t0Ref.current));
+  }, [steps, engine, enabled, schedulePass, stopBand]);
+
   // Switching the band on mid-pass drops it in on the next beat rather than
   // restarting the piece, which is the point of having a switch at all.
   const prevBandOn = useRef(bandOn);
@@ -233,7 +336,7 @@ export function useListenPlayer(
     prevBandOn.current = bandOn;
     stopBand();
     if (bandOn && statusRef.current === "playing") {
-      bandRef.current?.schedule({ t0: t0Ref.current, bpm });
+      bandRef.current?.schedule({ t0: t0Ref.current, bpm, until: t0Ref.current + totalSecRef.current });
     }
   }, [bandOn, bpm, stopBand]);
 
@@ -264,5 +367,5 @@ export function useListenPlayer(
 
   useEffect(() => cancelRaf, [cancelRaf]);
 
-  return { status, activeIndex, loop, play, pause, restart, toggleLoop };
+  return { status, activeIndex, loop, play, pause, restart, playBar, stop, toggleLoop, position };
 }

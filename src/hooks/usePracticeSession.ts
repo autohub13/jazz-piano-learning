@@ -42,8 +42,10 @@ export interface PracticeSession {
   held: ReadonlySet<Midi>;
   wrongNotes: ReadonlySet<Midi>;
   hintLevel: 0 | 1 | 2;
+  /** Whether a hint was showing at any point during this pass. */
+  hintUsed: boolean;
   accuracy: number | null;
-  noteDown(midi: Midi): void;
+  noteDown(midi: Midi, velocity?: number): void;
   noteUp(midi: Midi): void;
   releaseAll(): void;
   skip(): void;
@@ -64,6 +66,9 @@ export function usePracticeSession(
   const [held, setHeld] = useState<ReadonlySet<Midi>>(EMPTY);
   const [wrongNotes, setWrongNotes] = useState<ReadonlySet<Midi>>(EMPTY);
   const [hintLevel, setHintLevel] = useState<0 | 1 | 2>(0);
+  const [hintUsed, setHintUsed] = useState(false);
+  const hintLevelRef = useRef<0 | 1 | 2>(0);
+  hintLevelRef.current = hintLevel;
 
   const heldRef = useRef<Set<Midi>>(new Set());
   const armedRef = useRef(true);
@@ -165,9 +170,9 @@ export function usePracticeSession(
   }, [advance, clearTimer, extrasStillHeld]);
 
   const noteDown = useCallback(
-    (midi: Midi) => {
+    (midi: Midi, velocity = 96) => {
       // The user always hears themselves, right or wrong.
-      engineRef.current?.start({ note: midi, velocity: 96 });
+      engineRef.current?.start({ note: midi, velocity });
       if (heldRef.current.has(midi)) return;
       heldRef.current.add(midi);
       syncHeld();
@@ -221,6 +226,8 @@ export function usePracticeSession(
 
   const hint = useCallback(() => {
     setHintLevel((h) => (h >= 2 ? 0 : ((h + 1) as 0 | 1 | 2)));
+    // Pressing it from the top level turns hints off, which is not using one.
+    if (hintLevelRef.current < 2) setHintUsed(true);
   }, []);
 
   const restart = useCallback(() => {
@@ -231,6 +238,8 @@ export function usePracticeSession(
     setResults([]);
     setWrongNotes(EMPTY);
     setStatus("awaiting");
+    // A hint left on from the last pass is still a hint for this one.
+    setHintUsed(hintLevelRef.current > 0);
     armedRef.current = true;
   }, [clearTimer, releaseAll]);
 
@@ -271,6 +280,7 @@ export function usePracticeSession(
     held,
     wrongNotes,
     hintLevel,
+    hintUsed,
     accuracy,
     noteDown,
     noteUp,

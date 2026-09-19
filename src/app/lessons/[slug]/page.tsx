@@ -1,18 +1,16 @@
-"use client";
+// The old lesson URLs. Each one now lives as an exercise on the path.
 
-import dynamic from "next/dynamic";
-import { findLesson } from "@/lib/lessons/curriculum";
+import { redirect } from "next/navigation";
+import { findExercise } from "@/lib/curriculum/tree";
 
-// Every part of the player touches window, AudioContext or pointer events, so
-// there is nothing worth rendering on the server.
-const LessonWorkspace = dynamic(() => import("@/components/LessonWorkspace"), {
-  ssr: false,
-  loading: () => <div className="gate">Loading the keyboard...</div>,
-});
+const MOVED: Record<string, string> = {
+  "c-major-scale": "major-scale",
+  "shell-voicings": "shells",
+  "ii-v-i": "ii-v-i-shells",
+  "blues-in-c": "f-blues",
+};
 
-export default function LessonPage({ params }: { params: { slug: string } }) {
-  const lesson = findLesson(params.slug);
-  // The server layout already rendered the not-found boundary for a bad slug.
-  if (!lesson) return null;
-  return <LessonWorkspace lesson={lesson} />;
+export default function OldLessonPage({ params }: { params: { slug: string } }) {
+  const id = MOVED[params.slug] ?? params.slug;
+  redirect(findExercise(id) ? `/practice/${id}` : "/path");
 }

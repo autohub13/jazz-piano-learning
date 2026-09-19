@@ -1,108 +1,67 @@
-# Jazz Piano Learning
+# Jazz Piano
 
-A beginner jazz piano course you play in the browser. Each lesson shows a piano
-keyboard, lights up the keys as they are played, then hands the keys to you.
+A browser course from the first key to playing a tune at a session. Everything is generated: a tune is a chord chart, an exercise is a function of a key, and the site arranges, grades and schedules the rest. Plug in a MIDI keyboard; the computer keyboard and mouse work too.
 
-Prototype. Beginner mode only.
+## What it trains, every day
 
-## Running it
+1. Voicings under the hands in all twelve keys: shells, rootless A and B forms, drop 2, quartal, altered dominants.
+2. Ears: hearing a chord quality or a cadence and playing it back.
+3. Reading and playing tunes from a lead sheet with a band, in time.
+4. Improvising over changes, scored by how each note sits against the chord under it.
 
-```
-npm install
-npm run dev        # http://localhost:3000
-npm run build
-npm run typecheck
-```
+The fastest route is repertoire driven. A skill is drilled alone for a few minutes, used in a progression, then in a tune, cycled through the keys round the circle of fourths, and spaced out so it comes back before it is forgotten.
 
-## How it works
+## The path
 
-Each lesson has two modes.
+Six levels, each a few units, each unit a few exercises (`src/lib/curriculum/tree.ts`):
 
-**Listen** schedules the whole lesson onto the Web Audio clock in one pass, then
-runs a `requestAnimationFrame` loop that reads `audioContext.currentTime` to
-decide which step is currently sounding. Both the audio and the highlight are
-pure functions of the same clock, so they cannot drift apart. Pause suspends the
-AudioContext, which freezes that clock and therefore freezes sound and picture
-together with no extra bookkeeping.
+1. Foundations: the keyboard, major scales with fingering, intervals, triads, the four seventh chords.
+2. Shells and the ii-V-I: shells in every key, the cadence with a walking bass, the blues, a first tune.
+3. Rootless comping: A and B forms, the turnaround, Charleston rhythm, tunes with moving dominants.
+4. Minor and colour: the minor ii-V-i, altered dominants, drop 2, tritone substitution.
+5. Lines and improvising: chord scales, guide tone lines, enclosures, bebop scales, improvising over the cadence, the blues and a 32-bar form, ear tests.
+6. The session: quartal voicings, rhythm changes, uptempo.
 
-**Practice** shows the target notes as ghost outlines and waits. A step is
-satisfied when the held notes exactly equal the target: all of them, none extra.
-Evaluation happens on key-down only, and a partial chord produces no verdict, so
-a beginner rolling a chord over two seconds has unlimited time to assemble it.
-After advancing, evaluation is gated until the hands have let go at least once,
-otherwise leftover fingers from a shared note race through the lesson.
+A card unlocks when its prerequisites are done in at least one key. A timed card is only marked done with the band on, at the tempo it names, with 70 percent of the hits on the beat.
 
-## Input
+## Pages
 
-Mouse or touch on the on-screen keys, and the computer keyboard. The QWERTY
-mapping is the standard tracker layout, keyed by physical position so it works
-on non-QWERTY layouts. Arrow up and down shift the octave.
+- `/` Today: the due reviews and the next new thing, about twenty minutes.
+- `/path` The skill tree with per-key mastery dots.
+- `/tunes` The repertoire.
+- `/practice/[id]?key=&v=` One exercise. Modes depend on its kind: Listen, Practice (own pace), Timed (against the band), Improvise, Ear.
+- `/lessons/[slug]` Old links, redirected to the matching exercise.
 
-Most keyboards will not report more than a few simultaneous keys, so four-note
-chords may drop a note when typed. Click those with the mouse.
+## How content is generated
+
+- `src/lib/tunes/library.ts` holds the tunes as text charts: `| Dm7 | G7 | Cmaj7 | % |` plus an optional melody `C4:1:Oh E4:1:when ...`. Melodies are traditional or original; the changes of standards are given under generic names.
+- `src/lib/arrange/arrange.ts` turns a chart plus options (voicing, comping rhythm, melody treatment, reharmonisation) into lesson steps, harmony regions and a band part. Voicings are chosen by voice leading (`src/lib/music/voicings.ts`), the bass line by the usual walking habits (`src/lib/arrange/bass.ts`), and generated lines stay inside each chord's scale (`src/lib/music/chords.ts`).
+- `src/lib/curriculum/generators.ts` makes scale drills, chord-form drills, progression drills from degrees, guide tone etudes and ear tests, all as functions of a key.
+- `src/lib/lessons/curriculum.ts` still holds the handful of authored pieces (the vamp and the orientation drills).
+
+## Grading
+
+- Practice: the held set must equal the target, judged on note-down only. A partial chord is never wrong.
+- Timed (`src/hooks/useTimedSession.ts`): the player runs silent with the band; each step is scored when the clock leaves it. A hit within 120 ms of the beat is on time.
+- Improvise (`src/hooks/useImprovSession.ts`, `src/lib/grading/improv.ts`): every note is a chord tone, a scale tone or outside. The chorus score weighs notes in the scale, chord tones on beats one and three, and 3rds or 7ths struck on a chord change.
+- Ear (`src/hooks/useEarSession.ts`): a chord sounds, the learner plays it back in any octave; pitch classes are compared.
+
+## Progress
+
+`src/lib/progress.ts`, localStorage only. Each (exercise, key) is a card. A pass at the mastery bar schedules the next review 1, 3, 7, 14, 30 then 60 days out; a fail brings it back to tomorrow. `planToday` takes the due cards, then the next unlocked exercise in the lowest unfinished level, mixing kinds.
 
 ## Audio
 
-Piano samples come from `smplr` over its CDN, loaded behind an explicit Start
-button because browsers require a user gesture to open an AudioContext. If the
-samples cannot be reached within ten seconds, the app falls back to a
-synthesized piano voice and says so in the interface.
+Everything is scheduled on absolute AudioContext time and the highlight reads `ctx.currentTime` inside `requestAnimationFrame`, so sound and picture cannot drift. Pause suspends the context. The band (bass and drums) is synthesised; the piano is sampled with a synth fallback. `src/lib/audio/pianoEngine.ts` is the only file that imports `smplr`. A hidden tab pauses playback, since the browser stops animation frames there.
 
-## Layout
+## Running
 
 ```
-src/lib/music/       note representation, keyboard geometry, QWERTY mapping
-src/lib/audio/       the piano engine, the only place smplr is imported
-src/lib/lessons/     lesson schema, the curriculum, the playback timeline
-src/hooks/           audio engine, listen player, practice session, key input
-src/components/      keyboard, workspace, transport, legend
-src/app/             routes
+npm install
+npm run dev
+npm test
+npm run typecheck
+npm run build
 ```
 
-The curriculum array in `src/lib/lessons/curriculum.ts` drives the landing page,
-the routes and the per-lesson metadata. Adding a lesson means adding an object
-to it.
-
-The first entry is the piece the site opens with, a two hand ii-V-I vamp. Every
-entry after it carries an `ingredient` line and is one part of that piece,
-ordered from the largest chunk down to the keyboard itself, which is why `order`
-runs backwards through the usual syllabus. The landing page lists exactly the
-lessons that have an `ingredient`.
-
-The last lesson is a whole tune, "When the Saints Go Marching In". It is a
-traditional spiritual and out of copyright; the melody and chords follow the
-standard transcription, while the voicings, the bass line and the arrangement
-are this site's own. Its tonic is C6 rather than Cmaj7 because the melody keeps
-landing on C and a major 7th would sit a semitone under it. Step labels are the
-lyrics, so the cue line sings along.
-
-Keys are coloured by hand while they sound: brass for the right, violet for the
-left. A step says which hand plays it with `hand`, or names a hand per note with
-`hands` when both play at once, as in the vamp where a shell sits under a melody
-note. There is no pitch split point because there cannot be one: the vamp's
-melody dips below the left hand's top note. Hand colours are Listen only, since
-in Practice the same colours already mean right and wrong.
-
-A lesson with a `harmony` array can explain itself, but never while the
-music is running. A chord is on screen for about two seconds at tempo and the
-sentences take about twelve to read, so streaming them past is worse than
-showing nothing. While it plays the panel is a position indicator: the chord
-name, where you are on the map, and the hand colours. Pause, or click a chord
-chip, and it becomes an explanation. Clicking a chip disables the player, which
-is what silences the loop and hands back the AudioContext so that one chord can
-be sounded alone and read about at reading speed.
-
-Each region names one chord, its place in the key, and what changed on the way
-into it. Degrees are worked out at runtime in
-`src/lib/music/harmony.ts` from the written chord symbol rather than guessed
-from the notes, because a shell voicing has no fifth and often no root on top.
-Anything written in a `move` line must describe the voicing as it is actually
-played, not the textbook ideal.
-
-A lesson with a `band` gets an upright bass and a brushed kit behind Listen
-mode, switchable off. Only the three that are actual pieces have one. The band
-is synthesized in `src/lib/audio/band.ts` rather than sampled, so it is ready
-the moment the AudioContext is and it still plays when the piano has fallen back
-to its synth. The walking bass is written out one note per beat; the drums are
-derived from the bar position. Both are scheduled against the same `t0` as the
-piano, so the whole trio stays locked to the keys lighting up.
+Next.js 14 App Router, TypeScript strict, Tailwind 3, Vitest.

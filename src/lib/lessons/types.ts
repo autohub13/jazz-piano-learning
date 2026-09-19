@@ -32,6 +32,17 @@ export interface LessonStep {
    *  Wins over `hand`. A shell under a melody note cannot be described by a
    *  single hand, which is why this exists. */
   hands?: Hand[];
+  /** Per note, index aligned with `notes`: true when the note carries on from
+   *  the step before rather than being struck again. Generated variations use
+   *  it to hold a chord under a moving tune. */
+  tied?: boolean[];
+}
+
+/** A chord for one of the band's other instruments, in beats from startBeat. */
+export interface BandHit {
+  beat: number;
+  beats: number;
+  notes: Midi[];
 }
 
 /**
@@ -46,6 +57,12 @@ export interface BandChart {
   bass: (Midi | null)[];
   /** Bar length in beats, counted from startBeat. */
   beatsPerBar: number;
+  /** Rhythm guitar, one chord per beat alongside the bass. It is the only
+   *  harmony the learner hears while improvising, when the piano is theirs. */
+  comp?: (Midi[] | null)[];
+  /** Vibraphone and horn section, trading four-bar phrases over the rhythm
+   *  section. With it the kit also plays fills and marks the top of the form. */
+  ensemble?: { vibes: BandHit[]; horns: BandHit[] };
 }
 
 /**
@@ -90,6 +107,9 @@ export interface Lesson {
   /** Bass and drums behind Listen mode. Only the pieces have one; a drill
    *  like the C major scale would fight a walking bass, not sit on it. */
   band?: BandChart;
+  /** Pitch class of the tonic when the form is a blues. A solo may then use
+   *  the tonic's blues scale over every chord, which is what the blues is. */
+  bluesTonicPc?: number;
   /** Chord by chord analysis, shown as the piece plays. */
   harmony?: HarmonyRegion[];
   steps: LessonStep[];

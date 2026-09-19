@@ -41,6 +41,9 @@
     --key-black: 28 12% 12%;
 
     --radius: 0.5rem;
+
+    /* Narrowest a white key may be. A mouse can hit 20px; a finger cannot. */
+    --key-min: 1.25rem;
   }
 
   * {
@@ -238,10 +241,6 @@
 .theory {
   display: grid;
   gap: 0.7rem;
-  padding: 0.85rem 1rem 0.95rem;
-  border: 1px solid hsl(var(--border));
-  border-radius: calc(var(--radius) - 2px);
-  background: hsl(var(--card) / 0.6);
 }
 
 .theory__chips {
@@ -533,6 +532,29 @@ button.theory__chip:hover {
   color: hsl(var(--muted-foreground) / 0.75);
 }
 
+.lesson-status {
+  align-self: center;
+  font-size: 0.72rem;
+  text-transform: uppercase;
+  letter-spacing: 0.13em;
+  color: hsl(var(--muted-foreground));
+}
+
+.lesson-status.is-done {
+  color: hsl(var(--secondary));
+}
+
+.payoff .lesson-status {
+  display: block;
+  margin-top: 0.75rem;
+}
+
+.streak {
+  margin: 0.4rem 0 0;
+  font-size: 0.85rem;
+  color: hsl(var(--primary));
+}
+
 /* ---------- lesson page ---------- */
 
 .crumbs {
@@ -551,6 +573,50 @@ button.theory__chip:hover {
 
 .crumbs a:hover {
   text-decoration: underline;
+}
+
+.lesson-top {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: space-between;
+  align-items: baseline;
+  gap: 0.4rem 1.5rem;
+  margin-bottom: 1.25rem;
+}
+
+.lesson-top .crumbs {
+  margin-bottom: 0;
+}
+
+.lesson-step {
+  display: flex;
+  gap: 0.8rem;
+  font-size: 0.8rem;
+  color: hsl(var(--muted-foreground));
+  font-variant-numeric: tabular-nums;
+}
+
+.lesson-step a,
+.lesson-head__jump {
+  color: hsl(var(--primary));
+  text-decoration: none;
+}
+
+.lesson-step a:hover,
+.lesson-head__jump:hover {
+  text-decoration: underline;
+}
+
+.lesson-head__jump {
+  font-size: 0.85rem;
+  white-space: nowrap;
+}
+
+/* Beside the player the notes are already in view. */
+@media (min-width: 1000px) {
+  .lesson-head__jump {
+    display: none;
+  }
 }
 
 .lesson-head__title {
@@ -776,15 +842,68 @@ button.theory__chip:hover {
 
 /* ---------- cue line ---------- */
 
+.keypick {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.4rem 0.7rem;
+}
+
+.keypick__caption {
+  font-size: 0.7rem;
+  text-transform: uppercase;
+  letter-spacing: 0.13em;
+  color: hsl(var(--muted-foreground));
+}
+
+.keypick__chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.3rem;
+}
+
+.keypick__chip {
+  min-width: 2.3rem;
+  padding: 0.25rem 0.5rem;
+  border-radius: 999px;
+  border: 1px solid hsl(var(--border));
+  background: hsl(30 10% 13%);
+  color: hsl(var(--muted-foreground));
+  font: inherit;
+  font-size: 0.8rem;
+  cursor: pointer;
+  transition: color 0.16s ease, border-color 0.16s ease, background 0.16s ease;
+}
+
+.keypick__chip:hover {
+  border-color: hsl(var(--primary) / 0.5);
+  color: hsl(var(--foreground));
+}
+
+.keypick__chip.is-done {
+  border-color: hsl(var(--secondary) / 0.7);
+  color: hsl(var(--secondary));
+}
+
+.keypick__chip.is-on {
+  border-color: hsl(var(--primary) / 0.7);
+  background: hsl(38 60% 18%);
+  color: hsl(var(--foreground));
+}
+
+.keypick__meta {
+  flex-basis: 100%;
+  font-size: 0.76rem;
+  line-height: 1.5;
+  color: hsl(var(--muted-foreground));
+}
+
 .cue {
   display: grid;
   gap: 0.2rem;
-  padding: 0.85rem 1.1rem;
-  border: 1px solid hsl(var(--border));
-  border-left-width: 3px;
-  border-radius: calc(var(--radius) - 2px);
-  background: hsl(var(--card));
-  min-height: 4.2rem;
+  padding: 0.2rem 0 0.2rem 1rem;
+  border-left: 3px solid hsl(var(--border));
+  min-height: 3.4rem;
   transition: border-color 0.18s ease;
 }
 
@@ -852,16 +971,46 @@ button.theory__chip:hover {
 
 /* ---------- the keyboard ---------- */
 
+/* The keys never get narrower than --key-min, so on a small screen the
+   keyboard is wider than its frame and scrolls inside it. */
+.piano-wrap {
+  display: grid;
+  gap: 0.5rem;
+}
+
+.piano-scroll {
+  overflow-x: auto;
+  overscroll-behavior-x: contain;
+  scrollbar-width: none;
+  border-radius: calc(var(--radius) - 2px);
+  box-shadow: 0 14px 34px hsl(0 0% 0% / 0.5);
+}
+
+.piano-scroll::-webkit-scrollbar {
+  display: none;
+}
+
+/* The slider that moves along the keyboard. A touch on a key plays it, so
+   panning needs a control of its own. */
+.piano-map {
+  width: 100%;
+  height: 1.75rem;
+  margin: 0;
+  accent-color: hsl(var(--primary));
+  touch-action: pan-y;
+}
+
 .piano {
   position: relative;
   width: 100%;
+  min-width: calc(var(--whites, 0) * var(--key-min));
   height: clamp(130px, 24vw, 210px);
   container-type: inline-size;
   border-radius: calc(var(--radius) - 2px);
   /* A felt strip and a lid shadow, so the keys sit in something. */
   background: linear-gradient(180deg, hsl(350 40% 22%) 0 6px, hsl(28 14% 9%) 6px);
   padding-top: 6px;
-  box-shadow: 0 14px 34px hsl(0 0% 0% / 0.5), inset 0 0 0 1px hsl(var(--border));
+  box-shadow: inset 0 0 0 1px hsl(var(--border));
   overflow: hidden;
   /* Fast repeated taps must reach the keys, not the native select-text and
      callout gestures. */
@@ -997,10 +1146,6 @@ button.theory__chip:hover {
 .legend {
   display: grid;
   gap: 0.85rem;
-  padding: 0.9rem 1.1rem 1rem;
-  border: 1px solid hsl(var(--border));
-  border-radius: calc(var(--radius) - 2px);
-  background: hsl(var(--card) / 0.6);
 }
 
 .legend__rows {
@@ -1055,6 +1200,10 @@ button.theory__chip:hover {
   color: hsl(var(--primary));
 }
 
+.legend__midi.is-on {
+  color: hsl(var(--secondary));
+}
+
 .legend__toggle {
   display: inline-flex;
   align-items: center;
@@ -1077,5 +1226,984 @@ button.theory__chip:hover {
   *::after {
     animation-duration: 0.01ms !important;
     transition-duration: 0.01ms !important;
+  }
+}
+
+.variations {
+  display: grid;
+  gap: 0.45rem;
+}
+
+/* Settings you change once, if at all: closed until asked for. */
+.fold {
+  padding: 0;
+  border: 0;
+  border-top: 1px solid hsl(var(--border));
+  border-radius: 0;
+  background: none;
+}
+
+.fold__summary {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 0.2rem 0.75rem;
+  padding: 0.7rem 0;
+  font-size: 0.85rem;
+  font-weight: 500;
+  cursor: pointer;
+  list-style: none;
+}
+
+.fold__summary::-webkit-details-marker {
+  display: none;
+}
+
+.fold__summary::before {
+  content: "+";
+  width: 0.8rem;
+  color: hsl(var(--primary));
+}
+
+.fold[open] > .fold__summary::before {
+  content: "\2212";
+}
+
+.fold__state {
+  font-size: 0.78rem;
+  font-weight: 400;
+  color: hsl(var(--muted-foreground));
+}
+
+.fold[open] {
+  padding-bottom: 0.9rem;
+}
+
+.variations__caption {
+  min-width: 4.5rem;
+}
+
+/* Navigation */
+
+.site-header__nav {
+  display: flex;
+  gap: 1.1rem;
+  font-size: 0.85rem;
+}
+
+.site-header__nav a {
+  color: hsl(var(--muted-foreground));
+}
+
+.site-header__nav a:hover {
+  color: hsl(var(--foreground));
+}
+
+.hero--compact {
+  padding-bottom: 1rem;
+}
+
+/* Dashboard */
+
+.dashboard {
+  display: grid;
+  gap: 2.5rem;
+  margin-top: 1rem;
+}
+
+.dashboard--loading,
+.tree--loading {
+  color: hsl(var(--muted-foreground));
+  padding: 2rem 0;
+}
+
+.today__head h2 {
+  font-family: var(--font-display);
+  font-size: 1.6rem;
+  margin: 0.2rem 0;
+}
+
+.today__meta {
+  color: hsl(var(--muted-foreground));
+  font-size: 0.9rem;
+  margin: 0;
+}
+
+.queue {
+  list-style: none;
+  padding: 0;
+  margin: 1rem 0 0;
+  display: grid;
+  gap: 0.5rem;
+}
+
+.queue__item {
+  display: grid;
+  grid-template-columns: auto 1fr auto;
+  grid-template-areas: "reason title minutes" "reason blurb minutes";
+  gap: 0.15rem 0.9rem;
+  align-items: center;
+  padding: 0.8rem 1rem;
+  border: 1px solid hsl(var(--border));
+  border-radius: var(--radius);
+  background: hsl(var(--card));
+  color: inherit;
+  text-decoration: none;
+}
+
+.queue__item:hover {
+  border-color: hsl(var(--primary) / 0.6);
+}
+
+.queue__reason {
+  grid-area: reason;
+  font-size: 0.68rem;
+  text-transform: uppercase;
+  letter-spacing: 0.12em;
+  padding: 0.25rem 0.5rem;
+  border-radius: 999px;
+  border: 1px solid hsl(var(--border));
+  color: hsl(var(--muted-foreground));
+  min-width: 5.2rem;
+  text-align: center;
+}
+
+.queue__reason.is-review {
+  border-color: hsl(var(--secondary) / 0.7);
+  color: hsl(var(--secondary));
+}
+
+.queue__reason.is-new {
+  border-color: hsl(var(--primary) / 0.7);
+  color: hsl(var(--primary));
+}
+
+.queue__title {
+  grid-area: title;
+  font-weight: 600;
+}
+
+.queue__key {
+  color: hsl(var(--primary));
+}
+
+.queue__blurb {
+  grid-area: blurb;
+  font-size: 0.85rem;
+  color: hsl(var(--muted-foreground));
+}
+
+.queue__minutes {
+  grid-area: minutes;
+  font-size: 0.8rem;
+  color: hsl(var(--muted-foreground));
+}
+
+.levels__list {
+  list-style: none;
+  padding: 0;
+  margin: 0.6rem 0 0;
+  display: grid;
+  gap: 0.35rem;
+}
+
+.levels__list a {
+  display: grid;
+  grid-template-columns: 2rem 1fr 8rem 4rem;
+  gap: 0.8rem;
+  align-items: center;
+  padding: 0.55rem 0.8rem;
+  border-radius: var(--radius);
+  color: inherit;
+  text-decoration: none;
+  border: 1px solid transparent;
+}
+
+.levels__list a:hover {
+  border-color: hsl(var(--border));
+}
+
+.levels__list .is-current a {
+  border-color: hsl(var(--primary) / 0.5);
+}
+
+.levels__list .is-done .levels__title {
+  color: hsl(var(--secondary));
+}
+
+.levels__num {
+  font-family: var(--font-display);
+  font-size: 1.2rem;
+  color: hsl(var(--primary));
+}
+
+.levels__bar {
+  height: 6px;
+  border-radius: 3px;
+  background: hsl(var(--border));
+  overflow: hidden;
+}
+
+.levels__bar span {
+  display: block;
+  height: 100%;
+  background: hsl(var(--primary));
+}
+
+.levels__count {
+  font-size: 0.8rem;
+  color: hsl(var(--muted-foreground));
+  text-align: right;
+}
+
+/* Skill tree */
+
+.tree {
+  display: grid;
+  gap: 2.5rem;
+  margin-top: 1rem;
+}
+
+.tree__level h2 {
+  font-family: var(--font-display);
+  font-size: 1.5rem;
+  margin: 0 0 0.8rem;
+}
+
+.tree__num {
+  color: hsl(var(--primary));
+  margin-right: 0.4rem;
+}
+
+.tree__unit {
+  margin-bottom: 1.4rem;
+}
+
+.tree__unit h3 {
+  margin: 0;
+  font-size: 1.05rem;
+}
+
+.tree__unit > p {
+  margin: 0.15rem 0 0.7rem;
+  color: hsl(var(--muted-foreground));
+  font-size: 0.9rem;
+}
+
+.tree__cards {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(15rem, 1fr));
+  gap: 0.6rem;
+}
+
+.card {
+  display: grid;
+  gap: 0.3rem;
+  padding: 0.85rem 1rem;
+  border: 1px solid hsl(var(--border));
+  border-radius: var(--radius);
+  background: hsl(var(--card));
+  color: inherit;
+  text-decoration: none;
+}
+
+.card:hover {
+  border-color: hsl(var(--primary) / 0.6);
+}
+
+.card.is-locked {
+  opacity: 0.45;
+}
+
+.card.is-done {
+  border-color: hsl(var(--secondary) / 0.6);
+}
+
+.card__kind {
+  font-size: 0.66rem;
+  text-transform: uppercase;
+  letter-spacing: 0.13em;
+  color: hsl(var(--muted-foreground));
+}
+
+.card__title {
+  font-weight: 600;
+}
+
+.card__blurb {
+  font-size: 0.83rem;
+  color: hsl(var(--muted-foreground));
+  line-height: 1.4;
+}
+
+.card__keys {
+  display: flex;
+  gap: 3px;
+  margin-top: 0.2rem;
+}
+
+.card__dot {
+  width: 9px;
+  height: 9px;
+  border-radius: 50%;
+  border: 1px solid hsl(var(--border));
+}
+
+.card__dot.is-done {
+  background: hsl(var(--secondary));
+  border-color: hsl(var(--secondary));
+}
+
+.card__meta {
+  font-size: 0.75rem;
+  color: hsl(var(--muted-foreground));
+}
+
+/* Lead sheet */
+
+.leadsheet {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 2px;
+}
+
+.leadsheet__bar {
+  min-height: 2.6rem;
+  padding: 0.35rem 0.5rem;
+  border-left: 1px solid hsl(var(--border));
+  border-bottom: 1px solid hsl(var(--border));
+  display: flex;
+  gap: 0.6rem;
+  align-items: center;
+  font-family: var(--font-display);
+  font-size: 1.05rem;
+}
+
+.leadsheet__bar:nth-child(4n) {
+  border-right: 1px solid hsl(var(--border));
+}
+
+.leadsheet__bar.is-active {
+  background: hsl(38 60% 18%);
+}
+
+.leadsheet__bar.is-pickup {
+  border-left-style: dashed;
+  opacity: 0.7;
+}
+
+.leadsheet__bar.is-playable {
+  cursor: pointer;
+}
+
+.leadsheet__bar.is-playable:hover {
+  background: hsl(var(--muted) / 0.5);
+}
+
+.leadsheet__bar.is-playable:focus-visible {
+  outline: 2px solid hsl(var(--primary));
+  outline-offset: -2px;
+}
+
+.leadsheet__repeat {
+  color: hsl(var(--muted-foreground));
+}
+
+/* Sheet music */
+
+.sheet {
+  display: grid;
+  gap: 0.25rem;
+  padding: 0.5rem 0.75rem;
+  border: 1px solid hsl(var(--border));
+  border-radius: var(--radius);
+  background: hsl(var(--card));
+  color: hsl(var(--foreground));
+}
+
+.sheet__row {
+  display: block;
+  width: 100%;
+  height: auto;
+}
+
+.sheet__line,
+.sheet__barline {
+  stroke: hsl(var(--muted-foreground) / 0.55);
+  stroke-width: 1;
+}
+
+.sheet__barline.is-pickup {
+  stroke-dasharray: 3 3;
+}
+
+.sheet__now {
+  fill: hsl(38 60% 18%);
+}
+
+.sheet__hit {
+  fill: transparent;
+  cursor: pointer;
+  pointer-events: all;
+}
+
+.sheet__hit:hover {
+  fill: hsl(var(--muted-foreground) / 0.08);
+}
+
+.sheet__hit:focus-visible {
+  outline: none;
+  stroke: hsl(var(--primary));
+  stroke-width: 2;
+}
+
+.sheet__clef {
+  fill: hsl(var(--muted-foreground));
+  font-family: "Noto Music", "Segoe UI Symbol", "Apple Symbols", serif;
+  font-size: 70px;
+}
+
+.sheet__chord {
+  fill: hsl(var(--primary));
+  font-family: var(--font-display);
+  font-size: 17px;
+}
+
+.sheet__note {
+  color: hsl(var(--foreground));
+}
+
+.sheet__note.is-active {
+  color: hsl(var(--primary));
+}
+
+.sheet__head,
+.sheet__dot,
+.sheet__rest {
+  fill: currentColor;
+}
+
+.sheet__rest {
+  color: hsl(var(--muted-foreground));
+}
+
+.sheet__head.is-hollow {
+  fill: hsl(var(--card));
+  stroke: currentColor;
+  stroke-width: 1.8;
+}
+
+.sheet__stem,
+.sheet__flag,
+.sheet__tie {
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 1.5;
+}
+
+.sheet__tie {
+  stroke: hsl(var(--muted-foreground));
+}
+
+.sheet__sign {
+  fill: currentColor;
+  font-family: "Noto Music", "Segoe UI Symbol", "Apple Symbols", serif;
+  font-size: 23px;
+}
+
+/* Improv meter */
+
+.meter {
+  display: grid;
+  gap: 0.6rem;
+  padding: 0.8rem 1rem;
+  border: 1px solid hsl(var(--border));
+  border-radius: var(--radius);
+  background: hsl(var(--card));
+}
+
+.meter__last {
+  font-weight: 600;
+  padding-left: 0.7rem;
+  border-left: 3px solid hsl(var(--border));
+}
+
+.meter__last.is-chord {
+  border-color: hsl(var(--secondary));
+}
+
+.meter__last.is-scale {
+  border-color: hsl(var(--primary));
+}
+
+.meter__last.is-outside {
+  border-color: hsl(var(--accent));
+}
+
+.meter__stats {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(8rem, 1fr));
+  gap: 0.5rem;
+  margin: 0;
+}
+
+.meter__stats dt {
+  font-size: 0.7rem;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  color: hsl(var(--muted-foreground));
+}
+
+.meter__stats dd {
+  margin: 0;
+  font-family: var(--font-display);
+  font-size: 1.3rem;
+}
+
+.meter__stats dd.is-pass {
+  color: hsl(var(--secondary));
+}
+
+.meter__hint {
+  margin: 0;
+  font-size: 0.8rem;
+  color: hsl(var(--muted-foreground));
+}
+
+.lesson-card--static {
+  cursor: default;
+}
+
+.lesson-card__links {
+  display: flex;
+  gap: 0.5rem;
+  margin-top: 0.6rem;
+}
+
+.site-header__nav {
+  align-items: center;
+}
+
+.dev-toggle {
+  font-size: 0.7rem;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  padding: 0.2rem 0.55rem;
+  border-radius: 999px;
+  border: 1px solid hsl(var(--border));
+  background: transparent;
+  color: hsl(var(--muted-foreground));
+  cursor: pointer;
+}
+
+.dev-toggle.is-on {
+  border-color: hsl(var(--accent) / 0.8);
+  color: hsl(var(--accent));
+}
+
+/* ============================================================
+   Small screens and touch
+   ============================================================ */
+
+/* The typing legend is for a computer keyboard, the touch note for a phone. */
+.legend__touch {
+  display: none;
+}
+
+/* A finger, not a mouse: bigger keys, bigger targets, no hover lift. */
+@media (pointer: coarse) {
+  :root {
+    --key-min: 2.5rem;
+  }
+
+  .piano {
+    height: clamp(160px, 42vw, 220px);
+  }
+
+  .btn,
+  .mode-tab {
+    min-height: 2.75rem;
+  }
+
+  .keypick__chip {
+    min-width: 2.75rem;
+    min-height: 2.5rem;
+    padding-inline: 0.7rem;
+  }
+
+  .theory__chip {
+    min-height: 2.5rem;
+  }
+
+  .site-header__nav a,
+  .dev-toggle {
+    padding-block: 0.6rem;
+  }
+
+  .tempo input,
+  .piano-map {
+    height: 2.75rem;
+  }
+
+  /* Under 16px, iOS zooms the page when a control takes focus. */
+  .legend__toggle select {
+    font-size: 1rem;
+    padding: 0.4rem 0.5rem;
+  }
+
+  button,
+  a,
+  select,
+  [role="button"] {
+    touch-action: manipulation;
+    -webkit-tap-highlight-color: transparent;
+  }
+
+  .legend__rows,
+  .legend__typing {
+    display: none;
+  }
+
+  .legend__touch {
+    display: inline;
+  }
+}
+
+@media (hover: none) {
+  .btn:hover:not(:disabled),
+  .lesson-card:hover,
+  .stage__play:hover:not(:disabled) {
+    transform: none;
+  }
+}
+
+@media (max-width: 640px) {
+  body {
+    /* A fixed background repaints on every scroll frame on a phone. */
+    background-attachment: scroll;
+  }
+
+  .site-header {
+    align-items: center;
+    padding: 0.5rem 1rem;
+    padding-left: max(1rem, env(safe-area-inset-left));
+    padding-right: max(1rem, env(safe-area-inset-right));
+  }
+
+  /* One line where it fits. On the narrowest phones the nav drops under the
+     brand whole, and nothing breaks mid-word. */
+  .site-header {
+    flex-wrap: wrap;
+    row-gap: 0.1rem;
+  }
+
+  .site-header__brand,
+  .site-header__nav a,
+  .dev-toggle {
+    white-space: nowrap;
+  }
+
+  .site-header__brand {
+    font-size: 1.05rem;
+  }
+
+  .site-header__nav {
+    gap: 0.7rem;
+  }
+
+  .dev-toggle {
+    font-size: 0.62rem;
+    letter-spacing: 0.06em;
+    padding-inline: 0.45rem;
+  }
+
+  .page {
+    padding: 1.5rem 1rem 1rem;
+    padding-left: max(1rem, env(safe-area-inset-left));
+    padding-right: max(1rem, env(safe-area-inset-right));
+  }
+
+  .site-footer {
+    padding: 2rem 1rem calc(2rem + env(safe-area-inset-bottom));
+  }
+
+  .hero {
+    margin-bottom: 2rem;
+  }
+
+  .hero__actions .btn {
+    flex: 1 1 auto;
+    justify-content: center;
+  }
+
+  .crumbs {
+    flex-wrap: wrap;
+    gap: 0.3rem 0.5rem;
+    margin-bottom: 0.9rem;
+  }
+
+  .lesson-head__tagline {
+    margin-bottom: 1.25rem;
+  }
+
+  /* Dashboard: the badge and the minutes share a line, the words get the rest. */
+  .queue__item {
+    grid-template-columns: 1fr auto;
+    grid-template-areas: "reason minutes" "title title" "blurb blurb";
+    gap: 0.3rem 0.6rem;
+    padding: 0.8rem 0.9rem;
+  }
+
+  .queue__reason {
+    justify-self: start;
+    min-width: 0;
+  }
+
+  .levels__list a {
+    grid-template-columns: 1.6rem minmax(0, 1fr) auto;
+    grid-template-areas: "num title count" "num bar bar";
+    gap: 0.35rem 0.6rem;
+    padding: 0.6rem 0.5rem;
+  }
+
+  .levels__num {
+    grid-area: num;
+  }
+
+  .levels__title {
+    grid-area: title;
+  }
+
+  .levels__bar {
+    grid-area: bar;
+  }
+
+  .levels__count {
+    grid-area: count;
+  }
+
+  .dashboard,
+  .tree {
+    gap: 2rem;
+  }
+
+  /* Workspace: each group of controls gets the full width. */
+  .workspace__bar {
+    display: grid;
+    gap: 0.6rem;
+  }
+
+  .mode-tabs {
+    display: flex;
+  }
+
+  .mode-tab {
+    flex: 1;
+    justify-content: center;
+    padding-inline: 0.4rem;
+  }
+
+  .transport .btn {
+    flex: 1 1 auto;
+    justify-content: center;
+  }
+
+  .tempo {
+    flex: 1 1 100%;
+  }
+
+  .tempo input {
+    flex: 1;
+    width: auto;
+  }
+
+  .keypick {
+    align-items: flex-start;
+  }
+
+  .keypick__caption,
+  .variations__caption {
+    flex-basis: 100%;
+    min-width: 0;
+  }
+
+  .cue__label {
+    font-size: 1.05rem;
+    overflow-wrap: anywhere;
+  }
+
+  .gate {
+    padding: 2rem 1.1rem;
+  }
+
+  .meter {
+    padding-inline: 0.85rem;
+  }
+
+  .lesson-body__notes {
+    padding: 1rem;
+  }
+
+  .lesson-body__notes li {
+    font-size: 0.92rem;
+  }
+
+  .lesson-nav {
+    flex-direction: column;
+  }
+
+  .lesson-nav .btn {
+    justify-content: center;
+  }
+
+  .lesson-card__links {
+    flex-wrap: wrap;
+  }
+
+  .payoff {
+    padding: 1.2rem 1.1rem 1.4rem;
+  }
+
+  /* Two chords in a bar have a quarter of a phone's width between them. */
+  .leadsheet__bar {
+    flex-wrap: wrap;
+    gap: 0 0.35rem;
+    min-height: 2.9rem;
+    padding: 0.3rem 0.35rem;
+    font-size: 0.88rem;
+  }
+
+  .sheet {
+    padding: 0.5rem 0.4rem;
+  }
+
+  .meter__stats {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+/* A phone on its side: little height, so spend it on the keys. */
+@media (orientation: landscape) and (max-height: 480px) {
+  .site-header {
+    padding-block: 0.3rem;
+    padding-left: max(1rem, env(safe-area-inset-left));
+    padding-right: max(1rem, env(safe-area-inset-right));
+  }
+
+  .page {
+    padding-top: 0.9rem;
+    padding-left: max(1rem, env(safe-area-inset-left));
+    padding-right: max(1rem, env(safe-area-inset-right));
+  }
+
+  .lesson-head__title {
+    font-size: 1.4rem;
+  }
+
+  .lesson-head__tagline {
+    margin-bottom: 0.8rem;
+  }
+
+  .lesson-top {
+    margin-bottom: 0.6rem;
+  }
+
+  /* Modes and transport on one row, where the width allows. */
+  .workspace__bar {
+    gap: 0.5rem;
+  }
+
+  .mode-tab {
+    padding-inline: 0.55rem;
+  }
+
+  .transport .btn {
+    padding-inline: 0.6rem;
+  }
+
+  /* Out of sight, still the slider's name. */
+  .tempo__label {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    overflow: hidden;
+    clip-path: inset(50%);
+    white-space: nowrap;
+  }
+
+  .tempo input {
+    width: 5rem;
+  }
+
+  /* The cue, the music and the keys fit one screen together. */
+  .workspace {
+    gap: 0.5rem;
+  }
+
+  .piano {
+    height: min(46vh, 180px);
+  }
+
+  .cue {
+    min-height: 0;
+  }
+}
+
+/* A phone held upright: ask for it on its side, where the keyboard fits. */
+.rotate-prompt {
+  display: none;
+}
+
+@media (orientation: portrait) and (pointer: coarse) and (max-width: 640px) {
+  .rotate-prompt {
+    position: fixed;
+    inset: 0;
+    z-index: 50;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 0.9rem;
+    padding: 2rem;
+    padding-bottom: calc(2rem + env(safe-area-inset-bottom));
+    text-align: center;
+    background: hsl(var(--background));
+  }
+
+  .rotate-prompt__icon {
+    width: 3.5rem;
+    height: 3.5rem;
+    color: hsl(var(--primary));
+  }
+
+  @media (prefers-reduced-motion: no-preference) {
+    .rotate-prompt__icon {
+      animation: rotate-hint 2.4s ease-in-out infinite;
+    }
+  }
+
+  .rotate-prompt__title {
+    margin: 0;
+    font-size: 1.5rem;
+  }
+
+  .rotate-prompt__text {
+    margin: 0 0 0.6rem;
+    max-width: 22rem;
+    color: hsl(var(--muted-foreground));
+  }
+}
+
+@keyframes rotate-hint {
+  0%,
+  25% {
+    transform: rotate(0deg);
+  }
+  60%,
+  100% {
+    transform: rotate(-90deg);
   }
 }
