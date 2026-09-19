@@ -8,7 +8,7 @@ import { bassLine, guitarComp, type BassChord } from "@/lib/arrange/bass";
 import { arrangeTune, chartFromTune, levelVariation } from "@/lib/arrange/tune";
 import { KEYS, type KeyName } from "@/lib/lessons/transpose";
 import type { BandChart, Finger, Hand, HarmonyRegion, Lesson, LessonStep } from "@/lib/lessons/types";
-import { parseChord, rootOnDegree, type Degree, type Quality } from "@/lib/music/chords";
+import { parseChord, rootOnDegree, stepInSet, type Degree, type Quality } from "@/lib/music/chords";
 import { degreeName } from "@/lib/music/harmony";
 import { isBlackKey, pitchClass, pitchClassName, type Midi, type Spelling } from "@/lib/music/notes";
 import { voicingForms, type VoicingStyle } from "@/lib/music/voicings";
@@ -47,7 +47,16 @@ function base(key: KeyName, slug: string, title: string, tagline: string): Omit<
 
 // Scales
 
-export type ScaleKind = "major" | "dorian" | "mixolydian" | "blues" | "bebop" | "melodicMinor";
+export type ScaleKind =
+  | "major"
+  | "dorian"
+  | "mixolydian"
+  | "blues"
+  | "bebop"
+  | "melodicMinor"
+  | "lydianDominant"
+  | "altered"
+  | "diminished";
 
 const SCALES: Record<ScaleKind, number[]> = {
   major: [0, 2, 4, 5, 7, 9, 11],
@@ -58,16 +67,26 @@ const SCALES: Record<ScaleKind, number[]> = {
   // tones fall on the beats when played in eighths.
   bebop: [0, 2, 4, 5, 7, 9, 10, 11],
   melodicMinor: [0, 2, 3, 5, 7, 9, 11],
+  // Three colours for a dominant. The first two are melodic minor again: from
+  // the 5th of the chord, and from a half step above its root.
+  lydianDominant: [0, 2, 4, 6, 7, 9, 10],
+  altered: [0, 1, 3, 4, 6, 8, 10],
+  // Half step, whole step, all the way up. Eight notes, so like the bebop
+  // scale it fills a bar of eighths from root to root.
+  diminished: [0, 1, 3, 4, 6, 7, 9, 10],
 };
 
 /** The chord each scale is for, so the band can play it underneath. */
-const SCALE_CHORD: Record<ScaleKind, Quality> = {
+const SCALE_CHORD: Record<ScaleKind, DegreeChord["quality"]> = {
   major: "maj7",
   dorian: "m7",
   mixolydian: "7",
   blues: "7",
   bebop: "7",
   melodicMinor: "m6",
+  lydianDominant: "7#11",
+  altered: "7alt",
+  diminished: "7b9",
 };
 
 /** How each quality is measured from its root, for the panel under a drill. */
@@ -88,9 +107,10 @@ function drillBand(chords: BassChord[]): BandChart {
 
 /**
  * A scale in swung eighths, the way a line uses it. A seven-note scale runs up
- * a bar to the octave and back down a bar. The bebop scale has eight notes, so
- * a bar of eighths from root to root keeps its chord tones on the beats: down
- * first, because that is the way bebop lines mostly run, then up.
+ * a bar to the octave and back down a bar. The bebop and diminished scales
+ * have eight notes, so a bar of eighths from root to root keeps its chord
+ * tones on the beats: down first, because that is the way bebop lines mostly
+ * run, then up.
  */
 export function scaleLine(kind: ScaleKind, key: KeyName): Lesson {
   const rootPc = keyPc(key);
@@ -160,6 +180,9 @@ export function scaleDrill(kind: ScaleKind, key: KeyName): Lesson {
     blues: "blues scale",
     bebop: "bebop dominant scale",
     melodicMinor: "melodic minor",
+    lydianDominant: "lydian dominant",
+    altered: "altered scale",
+    diminished: "half-whole diminished",
   };
   return {
     ...base(key, `scale-${kind}`, `${key} ${names[kind]}`, "Up and down, one octave, one note a beat."),
@@ -268,7 +291,7 @@ export function inversionDrill(key: KeyName): Lesson {
 /** A chord as a degree of the key: semitones above the tonic, quality, beats. */
 export interface DegreeChord {
   degree: number;
-  quality: Quality | "7b9" | "7#11" | "7b13";
+  quality: Quality | "7b9" | "7#11" | "7b13" | "7alt";
   beats: number;
 }
 
@@ -314,6 +337,16 @@ export const PROGRESSIONS: Record<string, Progression> = {
       { degree: 0, quality: "m6", beats: 8 },
     ],
     blurb: "Half diminished, altered dominant, minor sixth. The dark version of the cadence.",
+  },
+  "altered-ii-v-i": {
+    id: "altered-ii-v-i",
+    title: "ii-V7alt-I",
+    chords: [
+      { degree: 2, quality: "m7", beats: 4 },
+      { degree: 7, quality: "7alt", beats: 4 },
+      { degree: 0, quality: "maj7", beats: 8 },
+    ],
+    blurb: "The cadence with every tension of the V bent: b9, #9, b5, b13. Each one is a half step from a note of the I.",
   },
   "tritone-ii-v-i": {
     id: "tritone-ii-v-i",
@@ -442,6 +475,37 @@ export function arpeggioEtude(p: Progression, key: KeyName, degrees: readonly De
   const { steps, harmony, band } = arrange(chart, v);
   const lesson = arrangeTune(tune, key, v);
   return { ...lesson, steps, harmony, band, range: chart.range, topic: "progression", tagline: "Each chord a note at a time, up and back." };
+}
+
+/**
+ * A line over the ii-V7alt-I in swung eighths. Up the ii from its 3rd to its
+ * 9th and back down its scale to the 5th; then the altered scale down an
+ * octave, from the 3rd of the V to the 3rd of the V, which is a half step
+ * under the root of the I.
+ */
+export function alteredLineEtude(key: KeyName, v: Variation): Lesson {
+  const tune = progressionTune(PROGRESSIONS["altered-ii-v-i"], key);
+  const chart = chartFromTune(tune, key);
+  const [two, five, one] = chart.chords.map((c) => parseChord(c.symbol));
+  const line: Midi[] = [];
+  for (const d of ["3", "5", "7", "9"] as const) {
+    let n = 64 + pitchClass(two.rootPc + two.degrees[d] - 64);
+    while (line.length > 0 && n <= line[line.length - 1]) n += 12;
+    line.push(n);
+  }
+  for (let k = 0; k < 4; k++) line.push(stepInSet(two, two.scale, line[line.length - 1], -1));
+  line.push(stepInSet(five, [five.degrees[3]], line[line.length - 1], 1));
+  for (let k = 0; k < 7; k++) line.push(stepInSet(five, five.scale, line[line.length - 1], -1));
+  const melody: NoteEvent[] = line.map((note, i) => {
+    const start = chart.chords[0].start + Math.floor(i / 2) * TPB + (i % 2) * ticks(2 / 3);
+    return { start, len: i % 2 === 0 ? ticks(2 / 3) : ticks(1 / 3), notes: [note] };
+  });
+  melody.push({ start: chart.chords[2].start, len: chart.chords[2].len, notes: [stepInSet(one, [0], line[line.length - 1], 1)] });
+  chart.melody = melody;
+  chart.range = whiteRange(Math.min(chart.range.low, 45), Math.max(chart.range.high, ...line.map((n) => n + 2)));
+  const { steps, harmony, band } = arrange(chart, v);
+  const lesson = arrangeTune(tune, key, v);
+  return { ...lesson, steps, harmony, band, range: chart.range, tagline: "Up the ii, down the altered scale, and home by a half step." };
 }
 
 export function tuneLesson(tune: Tune, key: KeyName, level: number): Lesson {

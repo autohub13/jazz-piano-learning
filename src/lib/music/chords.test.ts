@@ -22,6 +22,11 @@ describe("parseChord", () => {
   it("reads alterations into the degrees and the scale", () => {
     expect(parseChord("A7b9").degrees[9]).toBe(1);
     expect(parseChord("Db7#11").scale).toContain(6);
+    const alt = parseChord("G7alt");
+    expect(alt.quality).toBe("7");
+    expect([alt.degrees[5], alt.degrees[9], alt.degrees[13]]).toEqual([6, 1, 8]);
+    // Ab melodic minor, read from G.
+    expect(alt.scale).toEqual([0, 1, 3, 4, 6, 8, 10]);
   });
 });
 

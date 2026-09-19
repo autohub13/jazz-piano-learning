@@ -1104,4 +1104,32 @@ export const songs: Record<string, Song[]> = {
       ],
     },
   ],
+  ballads: [
+    {
+      variation: DROP2,
+      masteryBpm: 60,
+      needs: ["drop2-forms"],
+      tune: {
+        slug: "song-last-call",
+        title: "Last Call",
+        key: "F",
+        style: "ballad",
+        bpm: { min: 44, default: 60, max: 100 },
+        level: 4,
+        blurb: "Eight slow bars. Every long note is a chord tone, so every one of them carries a whole drop 2 chord underneath.",
+        form: `| Fmaj7 | Em7b5 A7b9 | Dm7 | Cm7 F7 | Bbmaj7 Bbm6 | Am7 D7b9 | Gm7 C7 | F6 |`,
+        melody: `
+          | A4:2 C5:2 | D5:2 C#5:2 | D5:1 C5:1 A4:2 | G4:2 A4:2 |
+          | Bb4:1 D5:1 Db5:2 | E5:1 C5:1 Eb5:1 C5:1 | Bb4:2 G4:1 E4:1 | F4:4 |
+        `,
+      },
+      points: [
+        "A ballad is slow enough that every voice is heard. Play the four notes of each chord at exactly the same moment and let them ring for their full length.",
+        "The tune is the top voice of each drop 2 chord. Lean the right hand towards its little finger so the top note sings above the other three.",
+        "Bar two is a minor ii-V into the vi, and bar four a ii-V into the IV. The tune marks each arrival with the 3rd of the dominant rising a half step to the new root.",
+        "In bar five the IV turns minor under the tune: its 3rd falls a half step to the flat 3rd, and that one note is the whole change of colour.",
+        "The bass plays only on one and three, so the time is yours to keep. Count four slow beats through every held note.",
+      ],
+    },
+  ],
 };

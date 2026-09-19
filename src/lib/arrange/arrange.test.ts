@@ -187,4 +187,24 @@ describe("hand textures", () => {
       }
     }
   });
+
+  it("walking bass: a left hand note a beat under the tune, and the band's bass and guitar sit out", () => {
+    for (const tune of [blues, saints, tunes.find((t) => t.slug === "bb-blues")!]) {
+      for (const key of KEYS) {
+        const lesson = arrangeTune(tune, key, { ...shell, texture: "walk" });
+        const band = lesson.band!;
+        expect(band.bass.every((n) => n === null)).toBe(true);
+        expect(band.comp).toBeUndefined();
+        expect(band.ensemble).toBeUndefined();
+        for (const s of walk(lesson)) {
+          if (s.start < band.startBeat || !Number.isInteger(s.start)) continue;
+          expect(s.leftStruck, `${tune.slug} ${key} ${s.start}`).toHaveLength(1);
+          if (s.right.length) expect(s.leftStruck[0]).toBeLessThan(Math.min(...s.right));
+          if (s.regionStart) expect(s.leftStruck[0] % 12).toBe(s.chord.rootPc);
+        }
+        // With no tune the right hand has the chords.
+        if (!tune.melody) expect(walk(lesson).some((s) => s.rightStruck.length > 1)).toBe(true);
+      }
+    }
+  });
 });

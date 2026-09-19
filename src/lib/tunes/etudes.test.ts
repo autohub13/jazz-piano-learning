@@ -40,7 +40,8 @@ describe("etudes", () => {
   }
 
   it("gives every etude a score and the full band in every key", () => {
-    for (const e of exercises.filter((x) => x.etude)) {
+    // In the solo piano etude the left hand is the band.
+    for (const e of exercises.filter((x) => x.etude && x.unit !== "solo")) {
       for (const key of e.keys === "all" ? KEYS : e.keys) {
         const lesson = e.generate(key);
         expect(sheetOf(lesson), `${e.id} ${key}`).not.toBeNull();

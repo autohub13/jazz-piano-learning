@@ -157,6 +157,41 @@ export const tunes: Tune[] = [
     `,
   },
   {
+    slug: "misty",
+    title: "Misty",
+    composer: "Erroll Garner",
+    year: 1954,
+    key: "Eb",
+    style: "ballad",
+    bpm: { min: 46, default: 66, max: 120 },
+    level: 4,
+    blurb: "The ballad every pianist is asked for. A ii-V into the IV, then Abm7 Db7, the back door home, and a bridge that leaves the key twice.",
+    form: `
+      | Ebmaj7 | Bbm7 Eb7 | Abmaj7 | Abm7 Db7 | Ebmaj7 Cm7 | Fm7 Bb7 | Gm7 C7 | Fm7 Bb7 |
+      | Ebmaj7 | Bbm7 Eb7 | Abmaj7 | Abm7 Db7 | Ebmaj7 Cm7 | Fm7 Bb7 | Eb6 | % |
+      | Bbm7 | Eb7b9 | Abmaj7 | % | Am7 | D7 | Gm7b5 C7b9 | Fm7 Bb7 |
+      | Ebmaj7 | Bbm7 Eb7 | Abmaj7 | Abm7 Db7 | Ebmaj7 Cm7 | Fm7 Bb7 | Eb6 | Fm7 Bb7 |
+    `,
+  },
+  {
+    slug: "someday-my-prince",
+    title: "Someday My Prince Will Come",
+    composer: "Frank Churchill",
+    year: 1937,
+    key: "Bb",
+    style: "swing",
+    meter: 3,
+    bpm: { min: 80, default: 132, max: 200 },
+    level: 4,
+    blurb: "The jazz waltz, from a Disney film by way of Bill Evans and Miles Davis. Three beats to the bar, and dominants with a b13 pulling to the IV and the ii.",
+    form: `
+      | Bbmaj7 | D7b13 | Ebmaj7 | G7b13 | Cm7 | G7b13 | Cm7 | F7 |
+      | Dm7 | Dbdim7 | Cm7 | F7 | Dm7 | Dbdim7 | Cm7 | F7 |
+      | Bbmaj7 | D7b13 | Ebmaj7 | G7b13 | Cm7 | G7b13 | Cm7 | F7 |
+      | Fm7 | Bb7 | Ebmaj7 | Edim7 | Bbmaj7 | F7 | Bbmaj7 | F7 |
+    `,
+  },
+  {
     slug: "so-what",
     title: "So What",
     composer: "Miles Davis",

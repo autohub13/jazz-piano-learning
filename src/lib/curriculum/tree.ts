@@ -13,6 +13,7 @@ import { findTune } from "@/lib/tunes/library";
 import { songs } from "@/lib/tunes/songs";
 import { KEY_ORDER } from "@/lib/progress";
 import {
+  alteredLineEtude,
   arpeggioEtude,
   chordDrill,
   earLesson,
@@ -39,9 +40,11 @@ export const units: Unit[] = [
   { id: "changes", level: 3, title: "Playing changes", blurb: "Tunes with dominants that move." },
   { id: "minor", level: 4, title: "Minor", blurb: "The minor ii-V-i and altered dominants." },
   { id: "colour", level: 4, title: "Colour", blurb: "Drop 2, tritone substitution, and the tunes that use them." },
+  { id: "ballads", level: 4, title: "Ballads and waltzes", blurb: "Slow, and in three. The two feels every set has besides swing." },
   { id: "lines", level: 5, title: "Lines", blurb: "Chord scales, guide tones, and how bebop connects them." },
   { id: "improv", level: 5, title: "Improvising", blurb: "The band plays the form. You play what you hear." },
   { id: "ears", level: 5, title: "Ears", blurb: "Hear a chord and play it back." },
+  { id: "solo", level: 5, title: "Solo piano", blurb: "No bass player. The left hand walks the line and the right hand has everything else." },
   { id: "advanced", level: 6, title: "The session", blurb: "Rhythm changes, quartal voicings, tempo." },
 ];
 
@@ -66,6 +69,8 @@ const MELODY_TOP = { ...SHELL_HELD, texture: "melodyTop" } as const;
 const FILL = { ...SHELL_HELD, rhythm: "fill" } as const;
 const STRIDE = { ...SHELL_HELD, texture: "stride" } as const;
 const SOLO = { ...SHELL_HELD, texture: "solo" } as const;
+const WALK = { ...ROOTLESS_HELD, texture: "walk" } as const;
+const WALK_CHARLESTON = { ...ROOTLESS_CHARLESTON, texture: "walk" } as const;
 
 /** A tune's own key and the next three round the circle of fourths. */
 function fourKeys(home: KeyName): KeyName[] {
@@ -168,14 +173,23 @@ const core: Exercise[] = [
   ex({ id: "autumn-changes", title: "Autumn Leaves", kind: "tune", level: 4, unit: "colour", blurb: "Major and minor ii-V-I side by side.", tune: "autumn-changes", generate: tune("autumn-changes", 4), prerequisites: ["minor-ii-v-i", "drop2-forms"], mastery: { accuracy: ALL_ACC, bpm: 140 }, minutes: 8 }),
   ex({ id: "improv-satin-doll", title: "Improvise over Satin Doll", kind: "improv", level: 4, unit: "colour", blurb: "ii-Vs that never resolve. One short idea, moved up a step, then moved again.", tune: "satin-doll", generate: tune("satin-doll", 3), prerequisites: ["satin-doll", "improv-ja-da"], mastery: { accuracy: 0.8, bpm: 110 }, minutes: 7 }),
   etude({ unit: "colour", level: 4, variation: DROP2_ANTICIPATE, prerequisites: ["tritone-sub"], mastery: { accuracy: ALL_ACC, bpm: 110 }, minutes: 4 }),
+  ex({ id: "misty", title: "Misty", kind: "tune", level: 4, unit: "ballads", blurb: "A ballad with the trio: rootless chords held for their full length, and nowhere to hide.", tune: "misty", generate: (k) => arrangeTune(findTune("misty")!, k, ROOTLESS_HELD), prerequisites: ["minor-ii-v-i"], mastery: { accuracy: ALL_ACC, bpm: 66 }, minutes: 8 }),
+  ex({ id: "improv-misty", title: "Improvise over Misty", kind: "improv", level: 4, unit: "ballads", blurb: "A ballad solo is mostly long notes. Pick a chord tone and let it ring.", tune: "misty", generate: (k) => arrangeTune(findTune("misty")!, k, ROOTLESS_HELD), prerequisites: ["misty", "improv-satin-doll"], mastery: { accuracy: 0.8, bpm: 66 }, minutes: 8 }),
+  ex({ id: "someday-my-prince", title: "Someday My Prince Will Come", kind: "tune", level: 4, unit: "ballads", blurb: "The jazz waltz. Count three, and comp on one and the and of two.", tune: "someday-my-prince", generate: tune("someday-my-prince", 3), prerequisites: ["turnaround", "altered-dominants"], mastery: { accuracy: ALL_ACC, bpm: 132 }, minutes: 7 }),
+  ex({ id: "improv-someday", title: "Improvise over Someday My Prince", kind: "improv", level: 4, unit: "ballads", blurb: "Thirty-two bars in three. Phrases of two and four bars, as in four, only each bar is shorter.", tune: "someday-my-prince", generate: tune("someday-my-prince", 3), prerequisites: ["someday-my-prince", "improv-ja-da"], mastery: { accuracy: 0.8, bpm: 120 }, minutes: 7 }),
+  etude({ unit: "ballads", level: 4, variation: ROOTLESS_HELD, prerequisites: ["someday-my-prince"], mastery: { accuracy: ALL_ACC, bpm: 110 }, minutes: 4 }),
 
   // Level 5
   ex({ id: "scale-dorian", title: "Dorian", kind: "drill", level: 5, unit: "lines", blurb: "The scale over a m7 chord.", generate: (k) => scaleLine("dorian", k), prerequisites: ["major-scale"], mastery: { accuracy: ALL_ACC, bpm: 96 } }),
   ex({ id: "scale-mixolydian", title: "Mixolydian", kind: "drill", level: 5, unit: "lines", blurb: "The scale over a 7 chord.", generate: (k) => scaleLine("mixolydian", k), prerequisites: ["major-scale"], mastery: { accuracy: ALL_ACC, bpm: 96 } }),
   ex({ id: "scale-bebop", title: "Bebop scale", kind: "drill", level: 5, unit: "lines", blurb: "Mixolydian plus a passing 7th, so the chord tones land on the beats.", generate: (k) => scaleLine("bebop", k), prerequisites: ["scale-mixolydian"], mastery: { accuracy: ALL_ACC, bpm: 108 } }),
+  ex({ id: "scale-lydian-dominant", title: "Lydian dominant", kind: "drill", level: 5, unit: "lines", blurb: "Mixolydian with a raised 4th. The scale of a dominant that is not the V.", generate: (k) => scaleLine("lydianDominant", k), prerequisites: ["scale-mixolydian", "scale-melodic-minor"], mastery: { accuracy: ALL_ACC, bpm: 96 } }),
+  ex({ id: "scale-altered", title: "Altered scale", kind: "drill", level: 5, unit: "lines", blurb: "Melodic minor from a half step above the root. Every tension of the V, bent.", generate: (k) => scaleLine("altered", k), prerequisites: ["scale-melodic-minor", "altered-dominants"], mastery: { accuracy: ALL_ACC, bpm: 96 } }),
+  ex({ id: "scale-diminished", title: "Diminished scale", kind: "drill", level: 5, unit: "lines", blurb: "Half step, whole step, all the way up: the scale of a 7b9 heading for a major chord.", generate: (k) => scaleLine("diminished", k), prerequisites: ["altered-dominants"], mastery: { accuracy: ALL_ACC, bpm: 108 } }),
   ex({ id: "guide-tones", title: "Guide tone line", kind: "tune", level: 5, unit: "lines", blurb: "The 3rd or 7th of each chord, one note each, over the ii-V-I.", generate: (k) => guideToneEtude(PROGRESSIONS["ii-v-i"], k, ROOTLESS_HELD), prerequisites: ["ii-v-i-rootless"], mastery: { accuracy: ALL_ACC, bpm: 120 }, minutes: 4 }),
   ex({ id: "enclosures", title: "Enclosures", kind: "tune", level: 5, unit: "lines", blurb: "Each guide tone approached from above and below.", generate: (k) => guideToneEtude(PROGRESSIONS["ii-v-i"], k, { ...ROOTLESS_HELD, melody: "enclosure" }), prerequisites: ["guide-tones"], mastery: { accuracy: ALL_ACC, bpm: 120 }, minutes: 4 }),
   ex({ id: "bebop-lines", title: "Lines through the cycle", kind: "tune", level: 5, unit: "lines", blurb: "Scale runs between guide tones through the cycle of dominants.", generate: (k) => guideToneEtude(PROGRESSIONS["cycle-of-dominants"], k, { ...ROOTLESS_CHARLESTON, melody: "scaleRun" }), prerequisites: ["enclosures", "scale-bebop"], mastery: { accuracy: ALL_ACC, bpm: 140 }, minutes: 5 }),
+  ex({ id: "altered-lines", title: "Altered lines", kind: "tune", level: 5, unit: "lines", blurb: "The ii-V-I with an altered V: the line runs down the altered scale and lands a half step from where it stopped.", generate: (k) => alteredLineEtude(k, ROOTLESS_HELD), prerequisites: ["scale-altered", "enclosures"], mastery: { accuracy: ALL_ACC, bpm: 120 }, minutes: 4 }),
   etude({ unit: "lines", level: 5, variation: { ...ROOTLESS_HELD, melody: "scaleRun" }, prerequisites: ["enclosures"], mastery: { accuracy: ALL_ACC, bpm: 120 }, minutes: 5 }),
   ex({ id: "improv-ii-v-i", title: "Improvise over the ii-V-I", kind: "improv", level: 5, unit: "improv", blurb: "The band loops the cadence. Play chord tones on the beat.", generate: (k) => progressionDrill(PROGRESSIONS["ii-v-i"], k, ROOTLESS_CHARLESTON), prerequisites: ["guide-tones"], mastery: { accuracy: 0.8, bpm: 120 }, minutes: 5 }),
   ex({ id: "improv-so-what", title: "Improvise over So What", kind: "improv", level: 5, unit: "improv", blurb: "One dorian scale for sixteen bars, then the same thing a half step up.", tune: "so-what", generate: tune("so-what", 5), prerequisites: ["scale-dorian"], mastery: { accuracy: 0.8, bpm: 130 }, minutes: 6 }),
@@ -187,6 +201,13 @@ const core: Exercise[] = [
   ex({ id: "ear-quality", title: "Hear the quality", kind: "ear", level: 5, unit: "ears", blurb: "A seventh chord is played. Play it back.", generate: (k) => earLesson("quality", k), prerequisites: ["rootless-forms", "ear-sevenths"], mastery: { accuracy: 0.85 }, minutes: 4 }),
   ex({ id: "ear-cadence", title: "Hear the cadence", kind: "ear", level: 5, unit: "ears", blurb: "Major, minor or tritone ii-V-I. Play what you heard.", generate: (k) => earLesson("cadence", k), prerequisites: ["ear-quality", "minor-ii-v-i"], mastery: { accuracy: 0.85 }, minutes: 5 }),
   etude({ unit: "ears", level: 5, variation: ROOTLESS_HELD, prerequisites: ["ear-quality"], mastery: { accuracy: ALL_ACC, bpm: 80 }, minutes: 4 }),
+  ex({ id: "walking-bass", title: "Walking bass", kind: "progression", level: 5, unit: "solo", blurb: "The ii-V-I with the bass line in your left hand, a note a beat, and the chord held in your right.", generate: (k) => progressionDrill(PROGRESSIONS["ii-v-i"], k, WALK), prerequisites: ["ii-v-i-rootless", "saints-stride"], mastery: { accuracy: ALL_ACC, bpm: 100 }, minutes: 4 }),
+  ex({ id: "walking-turnaround", title: "Walking the turnaround", kind: "progression", level: 5, unit: "solo", blurb: "Two chords a bar: a root, then one note that leans into the next.", generate: (k) => progressionDrill(PROGRESSIONS.turnaround, k, WALK_CHARLESTON), prerequisites: ["walking-bass", "turnaround"], mastery: { accuracy: ALL_ACC, bpm: 100 }, minutes: 4 }),
+  ex({ id: "blues-walk", title: "Blues in F, walking", kind: "tune", level: 5, unit: "solo", blurb: "The riff on top and the bass line underneath. Two parts, one player.", tune: "f-blues", generate: (k) => arrangeTune(findTune("f-blues")!, k, WALK), prerequisites: ["walking-bass", "f-blues"], mastery: { accuracy: ALL_ACC, bpm: 100 }, minutes: 5 }),
+  ex({ id: "saints-walk", title: "When the Saints, walking", kind: "tune", level: 5, unit: "solo", blurb: "A tune you know over a bass line you have to think about.", tune: "when-the-saints", generate: (k) => arrangeTune(findTune("when-the-saints")!, k, WALK), prerequisites: ["walking-bass", "when-the-saints"], mastery: { accuracy: ALL_ACC, bpm: 100 }, minutes: 6 }),
+  ex({ id: "bb-blues-walk", title: "Blues in Bb, walking and comping", kind: "tune", level: 5, unit: "solo", blurb: "Charleston in the right hand against four even beats in the left.", tune: "bb-blues", generate: (k) => arrangeTune(findTune("bb-blues")!, k, WALK_CHARLESTON), prerequisites: ["walking-turnaround", "bb-blues"], mastery: { accuracy: ALL_ACC, bpm: 100 }, minutes: 5 }),
+  ex({ id: "autumn-walk", title: "Autumn Leaves, walking", kind: "tune", level: 5, unit: "solo", blurb: "Thirty-two bars as the whole rhythm section: the line below, the chords above.", tune: "autumn-changes", generate: (k) => arrangeTune(findTune("autumn-changes")!, k, WALK), prerequisites: ["walking-bass", "autumn-changes"], mastery: { accuracy: ALL_ACC, bpm: 110 }, minutes: 8 }),
+  etude({ unit: "solo", level: 5, variation: WALK, prerequisites: ["blues-walk"], mastery: { accuracy: ALL_ACC, bpm: 100 }, minutes: 5 }),
 
   // Level 6
   ex({ id: "quartal-forms", title: "Quartal voicings", kind: "drill", level: 6, unit: "advanced", blurb: "Stacked fourths. The modern sound.", generate: (k) => chordDrill(["m7", "7", "maj7"], "quartal", k), prerequisites: ["drop2-forms"] }),

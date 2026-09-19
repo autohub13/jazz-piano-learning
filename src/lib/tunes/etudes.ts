@@ -173,6 +173,24 @@ export const etudes: Record<string, Tune> = {
       | F5:2 D5:1 A4:1 | B4:2 Ab4:1 F4:1 | E4:4 | r:4 |
     `,
   },
+  ballads: {
+    slug: "etude-ballads",
+    title: "Turning Slowly",
+    key: "C",
+    style: "swing",
+    meter: 3,
+    bpm: { min: 70, default: 120, max: 180 },
+    level: 4,
+    blurb: "A jazz waltz: three beats to the bar, the weight on one, and a borrowed minor iv on the way home.",
+    form: `
+      | Cmaj7 | Am7 | Dm7 | G7 | Em7 | A7b9 | Dm7 | G7 |
+      | Cmaj7 | C7 | Fmaj7 | Fm6 | Dm7 | G7 | C6 | % |
+    `,
+    melody: `
+      | G4:2 E4:1 | C5:3 | A4:2 F4:1 | B4:3 | G4:1 B4:1 D5:1 | C#5:2 Bb4:1 | A4:2 F4:1 | F4:1 E4:1 D4:1 |
+      | G4:2 E4:1 | Bb4:3 | A4:2 C5:1 | Ab4:3 | F4:1 A4:1 C5:1 | B4:2 D5:1 | C5:6 |
+    `,
+  },
   lines: {
     slug: "etude-lines",
     title: "Thread",
@@ -218,6 +236,23 @@ export const etudes: Record<string, Tune> = {
     melody: `
       | B4:4 | Bb4:4 | A4:4 | Ab4:4 |
       | G4:4 | G4:2 C#5:2 | C5:2 B4:2 | C5:4 |
+    `,
+  },
+  solo: {
+    slug: "etude-solo",
+    title: "Left to Walk",
+    key: "C",
+    style: "swing",
+    bpm: { min: 60, default: 100, max: 170 },
+    level: 5,
+    blurb: "Sixteen bars with no bass player. The left hand walks and the right hand sings.",
+    form: `
+      | C6 | A7 | Dm7 | G7 | Em7 | A7 | Dm7 | G7 |
+      | C6 | C7 | Fmaj7 | F#dim7 | C6 A7 | Dm7 G7 | C6 | % |
+    `,
+    melody: `
+      | E4:1 G4:1 C5:2 | C#5:2 A4:2 | F4:1 A4:1 D5:2 | B4:2 G4:2 | G4:1 B4:1 D5:2 | C#5:2 E5:2 | D5:2 A4:2 | B4:2 D5:2 |
+      | E5:2 C5:2 | Bb4:3 G4:1 | A4:2 C5:2 | Eb5:2 C5:2 | E5:2 C#5:2 | D5:2 B4:2 | C5:4 | r:4 |
     `,
   },
   advanced: {

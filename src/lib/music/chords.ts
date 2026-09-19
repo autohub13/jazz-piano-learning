@@ -45,7 +45,7 @@ function qualityOf(rest: string): Quality {
   return "6";
 }
 
-/** "Dm7", "Db7#11", "A7b9", "F#dim7", "C6" -> the chord as degrees and scale. */
+/** "Dm7", "Db7#11", "A7b9", "G7alt", "F#dim7", "C6" -> the chord as degrees and scale. */
 export function parseChord(symbol: string): Chord {
   const rootPc = rootPitchClass(symbol);
   const rest = symbol.replace(/^[A-G][#b]?/, "");
@@ -53,8 +53,15 @@ export function parseChord(symbol: string): Chord {
   const degrees = { ...BASE[quality].degrees };
   let scale = BASE[quality].scale;
   if (quality === "7") {
-    // One alteration at a time is all the reharmonisations write.
-    if (rest.includes("b9")) {
+    // One alteration at a time is all the reharmonisations write. "alt" is
+    // all of them at once: the 5th, 9th and 13th flattened, and the altered
+    // scale, which is melodic minor from a half step above the root.
+    if (rest.includes("alt")) {
+      degrees[5] = 6;
+      degrees[9] = 1;
+      degrees[13] = 8;
+      scale = [0, 1, 3, 4, 6, 8, 10];
+    } else if (rest.includes("b9")) {
       degrees[9] = 1;
       degrees[13] = 8;
       scale = [0, 1, 4, 5, 7, 8, 10];

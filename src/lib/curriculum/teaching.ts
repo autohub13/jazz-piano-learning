@@ -280,6 +280,34 @@ export const TEACHING: Record<string, string[]> = {
     "The numerals are counted from the minor tonic, so the major cadence reads iv, bVII7, bIII. Read the chord panel for which key each bar is in.",
     "Drop 2 voicings in two hands, with anticipations: every change lands on the and of four of the bar before.",
   ],
+  misty: [
+    "A ballad is slow, so every chord is heard for a long time. Play all four notes of a voicing at exactly the same moment and hold them for their full length.",
+    "The bass plays only on one and three. There is far less to hide behind than at a medium tempo, and the time is yours to keep through every held chord.",
+    "Bar two is a ii-V into the IV. It makes the IV sound like home for a moment.",
+    "Bar four is the back door: a ii-V built on the minor iv, whose dominant is the flat VII. It comes home from a whole step below, and it sounds softer than the V.",
+    "The bridge goes to the IV, then leaves the key with a ii-V a tritone away from home. A minor ii-V and a major one bring it back.",
+  ],
+  "improv-misty": [
+    "At a ballad tempo one chord tone held for two beats is a phrase. Start there: the 3rd or the 7th of each chord, and nothing else.",
+    "Leave space. Play two bars, rest for two, and let the chords ring in the gap.",
+    "Over the back door in bar four aim for the flat 7th of the key, which is the root of the flat VII chord. It is the note that says the harmony went somewhere else.",
+    "When you add eighth notes, keep them even and unhurried. Swing barely applies at this tempo.",
+    "Sing what you are about to play. A ballad is where a solo most needs to sound like a song.",
+  ],
+  "someday-my-prince": [
+    "Three beats to the bar. The band walks in three, so count it before you play and keep counting through the long chords.",
+    "The left hand comps on one and on the and of two. That is the Charleston rhythm fitted into a waltz bar.",
+    "Bars two and four are dominants with a b13: the III7, which slips up a half step into the IV, and the VI7, which is the V of the ii. The b13 of the VI7 is the flat 3rd of the ii it resolves to.",
+    "In the second eight a diminished chord a half step above the ii slides down into it. Hear the bass walk iii, flat iii, ii.",
+    "Near the end a diminished chord a half step above the IV lifts the harmony back up to the I.",
+  ],
+  "improv-someday": [
+    "Think in two bar phrases: six beats, then breathe. A phrase that ignores the barline sounds lost in three far sooner than it does in four.",
+    "A dotted half note fills the bar. Start with one note a bar, a 3rd or a 7th, to hear the harmony go by.",
+    "Over the dominants with a b13, hold the b13. It is already a note of the chord that follows, the 5th of the IV or the flat 3rd of the ii, so it can ring across the barline.",
+    "Try three even quarter notes, then a bar's rest. Then try placing a note on beat two, which is where a jazz waltz lifts.",
+    "The form is thirty-two bars, as it is in four. Only the bars are shorter, so it goes by quickly.",
+  ],
 
   // Level 5
 
@@ -309,6 +337,27 @@ export const TEACHING: Record<string, string[]> = {
     "The drill descends first. Bebop lines mostly run downwards from a chord tone.",
     "The added note only passes. Never hold the natural 7th against a dominant chord.",
   ],
+  "scale-lydian-dominant": [
+    "Mixolydian with one note raised: the 4th becomes a #4, which a chord symbol calls the #11. Every other note is the same.",
+    "The plain 4th is the one note of mixolydian that fights the chord, because it sits a half step above the 3rd. Raising it removes the clash, so every note of this scale can be held.",
+    "It is the melodic minor scale starting from its 4th note. Play melodic minor from the 5th of the chord and you are playing this scale.",
+    "Use it on a dominant that does not resolve down a fifth: the II7 of Take the A Train, the tritone substitute, the IV7 of a blues.",
+    "The band plays a 7#11 under you. Hold the #11 against it and hear that it floats where the plain 4th would grind.",
+  ],
+  "scale-altered": [
+    "A dominant keeps its root, 3rd and flat 7th, and everything else is bent: b9, #9, b5, b13. There is no plain 5th, 9th or 13th left.",
+    "It is melodic minor from a half step above the root. If you know melodic minor you already know this scale. Only the starting note is new.",
+    "Every altered note is a half step from a note of the chord the V resolves to. That is the point of it: the most tension possible, then release by the shortest move.",
+    "Use it on a V that resolves down a fifth, to a major chord or a minor one. It does not suit a dominant that stays put.",
+    "The band plays a 7alt under you. The scale makes no sense alone, so listen to each note against the root in the bass.",
+  ],
+  "scale-diminished": [
+    "Half step, whole step, half step, whole step, all the way up. Eight notes, and the pattern repeats every minor 3rd.",
+    "Over a dominant it gives the b9, #9, #11 and the natural 13th, and it keeps the plain 5th. The natural 13th is how to tell it from the altered scale, which has a b13.",
+    "Because it repeats every minor 3rd there are only three of these scales. Whatever you learn over one dominant also fits the dominants a minor 3rd, a tritone and a major 6th away.",
+    "Eight notes fill a bar of eighths, so as with the bebop scale the root comes round on the downbeat. Every note on a beat is a note of the diminished seventh chord on the root.",
+    "It is the scale for a 7b9 heading to a major chord, and for a diminished seventh chord if you start it with the whole step.",
+  ],
   "guide-tones": [
     "The 3rd and 7th of each chord are its guide tones. They define the chord's quality, and they move the least from one chord to the next.",
     "This line holds one guide tone per chord, always the nearer one, so it moves by a half step or not at all.",
@@ -326,6 +375,13 @@ export const TEACHING: Record<string, string[]> = {
     "The run is aimed. It turns round rather than overshooting, so the guide tone still lands on the change.",
     "The scale changes when the chord does. Hear the one note that moves between each dominant's scale and the next.",
     "Swing the eighths: long then short, the second of each pair on the last third of the beat.",
+  ],
+  "altered-lines": [
+    "Bar one goes up the ii from its 3rd to its 9th, then back down the scale to its 5th. Bar two starts a whole step above that, on the 3rd of the V.",
+    "Bar two is the altered scale straight down for an octave, from the 3rd of the V to the 3rd of the V. On the way it passes the #9, b9, root, flat 7th, b13 and b5.",
+    "The line ends on the 3rd of the V, which is a half step under the root of the I, and resolves up into it. A whole bar of tension lets go by the smallest move there is.",
+    "The left hand holds the rootless altered voicing: the 3rd, b13, flat 7th and b9, in one order or the other. Play it alone against the bass and then add the line.",
+    "Once it is under the fingers, change where it lands: stop the run one note early and resolve down a half step to the 5th of the I.",
   ],
   "improv-ii-v-i": [
     "The band loops the ii-V-I and you are scored on chord tones landing on the beats. Everything between the beats is yours.",
@@ -379,6 +435,45 @@ export const TEACHING: Record<string, string[]> = {
     "Three cadences in one key. The major ii-V-I resolves bright, the minor one resolves dark, and the tritone one resolves with the bass sliding down by half steps.",
     "Listen to the bass first. Down a fifth twice is a ii-V-I. Down a half step twice is the tritone substitute.",
     "Listen to the last chord last. Whether home is major or minor decides between the other two.",
+  ],
+  "walking-bass": [
+    "The band's bass and guitar sit out. The drummer keeps time, and the bass line is in your left hand, one note on every beat.",
+    "Beat one of each chord is its root. The beats after it are chord tones, the 3rd and the 5th. The last beat before a change is an approach note, a half step above or below the next root, or that chord's 5th.",
+    "The right hand holds the rootless voicing for the whole chord. It sits higher than you are used to, above the bass line, around middle C.",
+    "Quarter notes are not swung. Play four even beats, each held for its full length, and lean a little on two and four.",
+    "Practise the left hand alone until you do not have to think about it. It is the part that cannot stop.",
+  ],
+  "walking-turnaround": [
+    "With two chords in a bar each one gets two beats: its root, then one approach note into the next root.",
+    "Most approach notes are outside the key. That is correct. A note a half step from its target sounds right whatever the key signature says.",
+    "The right hand plays the Charleston, on one and on the and of two, against four even beats in the left. The and of two falls between two bass notes. Do not let it pull the bass early.",
+    "Say the roots aloud as the left hand reaches them: I, vi, ii, V. If you lose the form, the roots on beats one and three will find it for you.",
+  ],
+  "blues-walk": [
+    "Two parts, one player: the riff in the right hand and a walking line in the left.",
+    "The riff repeats while the line underneath keeps changing. Let the left hand lead and hang the riff on it.",
+    "Where the chord lasts two bars the line keeps moving through chord tones. Only the first beat of a new chord has to be its root.",
+    "The band's bass and guitar are out. If the form falls apart, stop the riff and keep the left hand going until you find bar one again.",
+    "Start well under tempo. A walking line only works when it is steady.",
+  ],
+  "saints-walk": [
+    "You know this tune, and that is why it is here. The right hand can run on memory while you attend to the left.",
+    "The tune starts with three notes alone. The bass line comes in on bar one, on the root.",
+    "The first six bars sit on one chord. The line moves between its root, 3rd and 5th. It does not need to go anywhere, only to keep walking.",
+    "When the harmony does move, listen for the last beat before each change: a half step into the new root, or its 5th.",
+  ],
+  "bb-blues-walk": [
+    "No tune this time. The left hand walks and the right hand comps, so you are the whole rhythm section.",
+    "The right hand plays the Charleston, short and light. The bass line carries the time and the chords only mark it.",
+    "Between the I7 and the IV7 the right hand's voicing moves by a half step or not at all, while the left hand travels. Keep the right hand still and let the left hand move.",
+    "This is what a pianist plays behind a horn player when there is no bassist. Hum a blues head over it to hear it work.",
+  ],
+  "autumn-walk": [
+    "Thirty-two bars, one chord a bar for most of it, so the line has four beats on each: root, 3rd, 5th, approach.",
+    "The chords fall by fifths, so the approach notes often come from a half step above. Hear the bass lean into each new root.",
+    "The right hand holds each voicing for its full length. Hear the 7th of each chord fall to the 3rd of the next while the bass moves underneath.",
+    "In the last eight some bars have two chords. There the line shrinks to a root and an approach for each, as it did in the turnaround.",
+    "Play the form twice without stopping. Solo piano is mostly a matter of keeping the line going.",
   ],
 
   // Level 6
@@ -493,6 +588,13 @@ export const TEACHING: Record<string, string[]> = {
     "The voicing is drop 2 with the tune as its top voice. The right hand holds three notes and the left hand takes the dropped one, an octave down.",
     "The vibraphone has the first four bars and the horns answer in the next four. A snare fill marks each hand-over, so you can hear where you are in the form without counting.",
   ],
+  "etude-ballads": [
+    "Three beats to the bar. Count one, two, three with the weight on one, and let two and three be lighter.",
+    "The left hand plays once a bar, on one, and holds for all three beats. In a waltz the downbeat is where the harmony speaks.",
+    "The tune moves in three shapes: a long note and a short one, one note for the whole bar, or three even beats. Feel where each bar puts its weight before you play it.",
+    "Bar six is a V with a b9 pulling to the ii, and the tune plays its 3rd and its b9. In bar twelve the IV turns minor, and the tune holds its flat 3rd for the whole bar.",
+    "The ride cymbal is on every beat and the hi-hat is on two. Lock the second beat of each bar to the hi-hat and the waltz will swing.",
+  ],
   "etude-lines": [
     "Until the last two bars, beats one and three are the 3rd or the 7th of the chord. Those are the written notes, and everything between them is a run along the chord's scale to the next one.",
     "A run never arrives early. If it would reach the target before the beat, it goes one step past and comes back, which is how a bebop line circles a note.",
@@ -512,6 +614,13 @@ export const TEACHING: Record<string, string[]> = {
     "Sing the line while you play the left hand. It is the fastest way to learn what a quality sounds like, because only one note is doing the work.",
     "This falling line is inside a great many standards. Once you can hear it here you will start hearing it on records.",
     "The vibraphone has the first four bars and the horns answer in the next four. A snare fill marks each hand-over, so you can hear where you are in the form without counting.",
+  ],
+  "etude-solo": [
+    "There is no bass player and no guitar. The drummer keeps time and everything with a pitch comes from you.",
+    "The left hand plays a note on every beat: the root when a chord arrives, chord tones after it, and on the last beat of the chord a note a half step from the next root, or that chord's 5th.",
+    "The tune is written in long notes on purpose. Two busy hands are too much at first, so the right hand sings while the left hand walks.",
+    "Bars thirteen and fourteen have two chords each. Each gets only a root and one note that leads onwards.",
+    "Learn the left hand alone first, until it runs without attention. Then add the tune. A walking line that hesitates is worse than a simple one that does not.",
   ],
   "etude-advanced": [
     "Four bars of a rhythm changes A section, two chords a bar, then its bridge at half length: III7, VI7, II7, V7, a bar each.",

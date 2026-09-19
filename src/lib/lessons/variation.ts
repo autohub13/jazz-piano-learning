@@ -24,7 +24,7 @@ export const CHOICES: { [K in keyof Variation]: readonly Variation[K][] } = {
   reharm: ["written", "tritone", "secondary", "passingDim"] satisfies readonly Reharm[],
   melody: ["written", "arpeggio", "enclosure", "scaleRun"],
   rhythm: ["written", "held", "charleston", "anticipate", "fill"],
-  texture: ["written", "melodyTop", "stride", "solo"],
+  texture: ["written", "melodyTop", "stride", "solo", "walk"],
 };
 
 export const AS_WRITTEN: Variation = {

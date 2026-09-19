@@ -25,8 +25,11 @@ export type RhythmChoice = "written" | "held" | "charleston" | "anticipate" | "f
  * melodyTop: the left hand has the root, and the right hand fills the chord in
  * under the tune. stride: the left hand alternates bass and chord on the beat.
  * solo: the right hand alone, and the band has the chords.
+ * walk: solo piano. The left hand walks the bass line and the right has the
+ * tune, or the chords when there is no tune. The band's bass and guitar sit
+ * out, and only the drummer keeps time.
  */
-export type TextureChoice = "written" | "melodyTop" | "stride" | "solo";
+export type TextureChoice = "written" | "melodyTop" | "stride" | "solo" | "walk";
 
 export interface Variation {
   voicing: VoicingChoice;
@@ -416,8 +419,28 @@ export function arrange(chart: Chart, v: Variation, comp: NoteEvent[] = []): Arr
   const harmonised = drop2 && shaped.length > 0;
   let melody = v.texture === "melodyTop" || harmonised ? blockUnder(shaped, chords, chart) : shaped;
   const stride = v.texture === "stride" ? strideHits(chords, chart) : null;
+  const reharmonised = chords.some((c) => !c.written);
+  const sounding = chords
+    .filter((c) => end(c) > chart.startTick)
+    .map((c) => ({ symbol: c.symbol, beats: (end(c) - Math.max(c.start, chart.startTick)) / TPB }));
+  // A walking left hand has from C2 to just under the tune, and no higher than
+  // B3. With no tune it has the band's G3, or the octave a short keyboard
+  // leaves it, and the right hand comps above.
+  const walk = v.texture === "walk";
+  const walkLow = Math.max(36, chart.range.low);
+  const walkHigh =
+    shaped.length > 0 ? Math.min(59, ...shaped.flatMap((e) => e.notes).map((n) => n - 1)) : Math.max(55, walkLow + 11);
+  const bass = walk
+    ? bassLine(sounding, chart.style, chart.beatsPerBar, { low: walkLow, high: walkHigh })
+    : chart.bass && !reharmonised
+      ? chart.bass
+      : bassLine(sounding, chart.style, chart.beatsPerBar);
   const hits =
-    stride ? stride.hits : v.texture === "solo" || harmonised ? [] : compHits(comp, chords, v.rhythm, chart, melody);
+    stride
+      ? stride.hits
+      : v.texture === "solo" || harmonised || (walk && shaped.length > 0)
+        ? []
+        : compHits(comp, chords, v.rhythm, chart, melody);
   // What the left hand plays, and the chord shapes whose moves are described:
   // the left hand's chords, or with the melody on top, the right hand's.
   let left: NoteEvent[];
@@ -431,9 +454,13 @@ export function arrange(chart: Chart, v: Variation, comp: NoteEvent[] = []): Arr
     left = split.left;
     shapes = split.full.map((e) => ({ chord: chordAt(chords, e.start), notes: e.notes }));
   } else {
-    const voiced = voiceHits(hits, v.voicing === "drop2" && !drop2 ? "shell" : v.voicing, melody, chart);
+    const room = walk ? { ...chart, range: { ...chart.range, low: walkHigh + 1 } } : chart;
+    const voiced = voiceHits(hits, v.voicing === "drop2" && !drop2 ? "shell" : v.voicing, melody, room);
     shapes = hits.map((h, k) => ({ chord: h.chord, notes: voiced[k].notes }));
-    if (drop2) {
+    if (walk) {
+      left = bass.flatMap((n, i) => (n === null ? [] : [{ start: chart.startTick + i * TPB, len: TPB, notes: [n] }]));
+      if (shaped.length === 0) melody = voiced;
+    } else if (drop2) {
       // No tune: the left hand takes the dropped voice, the right the rest.
       left = voiced.map((e) => ({ ...e, notes: e.notes.slice(0, 1) }));
       melody = voiced.filter((e) => e.notes.length > 1).map((e) => ({ ...e, notes: e.notes.slice(1) }));
@@ -462,12 +489,7 @@ export function arrange(chart: Chart, v: Variation, comp: NoteEvent[] = []): Arr
       chart.spelling,
     );
   };
-  const reharmonised = chords.some((c) => !c.written);
   const startBeat = chart.startTick / TPB;
-  const sounding = chords
-    .filter((c) => end(c) > chart.startTick)
-    .map((c) => ({ symbol: c.symbol, beats: (end(c) - Math.max(c.start, chart.startTick)) / TPB }));
-  const bass = chart.bass && !reharmonised ? chart.bass : bassLine(sounding, chart.style, chart.beatsPerBar);
 
   return {
     steps,
@@ -478,13 +500,15 @@ export function arrange(chart: Chart, v: Variation, comp: NoteEvent[] = []): Arr
       role: c.role,
       move: keepMove && c.move ? c.move : moveInto(c),
     })),
-    band: {
-      startBeat,
-      beatsPerBar: chart.beatsPerBar,
-      bass,
-      comp: guitarComp(sounding),
-      ensemble: ensemble(sounding, chart.beatsPerBar),
-    },
+    band: walk
+      ? { startBeat, beatsPerBar: chart.beatsPerBar, bass: bass.map(() => null) }
+      : {
+          startBeat,
+          beatsPerBar: chart.beatsPerBar,
+          bass,
+          comp: guitarComp(sounding),
+          ensemble: ensemble(sounding, chart.beatsPerBar),
+        },
   };
 }
 
