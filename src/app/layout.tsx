@@ -1,6 +1,7 @@
 import type { Metadata, Viewport } from "next";
 import { Inter, Playfair_Display } from "next/font/google";
 import Link from "next/link";
+import { ChordSheetToggle } from "@/components/ChordSheetToggle";
 import { DevToggle } from "@/components/DevToggle";
 import { RotatePrompt } from "@/components/RotatePrompt";
 import "./globals.css";
@@ -42,6 +43,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
             <Link href="/">Today</Link>
             <Link href="/path">Path</Link>
             <Link href="/tunes">Tunes</Link>
+            <ChordSheetToggle />
             <DevToggle />
           </nav>
         </header>

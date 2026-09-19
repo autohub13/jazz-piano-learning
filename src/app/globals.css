@@ -1934,6 +1934,196 @@ button.theory__chip:hover {
   color: hsl(var(--accent));
 }
 
+/* ---------- chord cheat sheet ---------- */
+
+/* Reads as one of the nav links, since that is where it sits. */
+.chords-toggle {
+  color: hsl(var(--muted-foreground));
+  cursor: pointer;
+}
+
+.chords-toggle:hover {
+  color: hsl(var(--foreground));
+}
+
+.chords-toggle.is-on {
+  color: hsl(var(--primary));
+}
+
+/* A drawer down the right edge, under the rotate prompt and over all else.
+   No backdrop: the page beside it stays in use. */
+.chordsheet {
+  position: fixed;
+  top: 0;
+  right: 0;
+  bottom: 0;
+  z-index: 40;
+  width: min(100%, 40rem);
+  display: flex;
+  flex-direction: column;
+  gap: 0.9rem;
+  padding: 1rem 1.25rem 1.5rem;
+  padding-right: max(1.25rem, env(safe-area-inset-right));
+  padding-bottom: max(1.5rem, env(safe-area-inset-bottom));
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  background: hsl(var(--card));
+  border-left: 1px solid hsl(var(--border));
+  box-shadow: -18px 0 40px hsl(0 0% 0% / 0.45);
+}
+
+.chordsheet__head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+}
+
+.chordsheet__title {
+  margin: 0;
+  font-size: 1.3rem;
+}
+
+.chordsheet__close {
+  display: grid;
+  place-items: center;
+  width: 2.75rem;
+  height: 2.75rem;
+  margin: -0.5rem -0.6rem -0.5rem 0;
+  border-radius: 999px;
+  color: hsl(var(--muted-foreground));
+  cursor: pointer;
+}
+
+.chordsheet__close:hover {
+  color: hsl(var(--foreground));
+}
+
+.chordsheet__close svg {
+  width: 1.25rem;
+  height: 1.25rem;
+}
+
+.chordsheet__grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(15rem, 1fr));
+  gap: 0.7rem;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.chord-card {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  padding: 0.7rem 0.75rem 0.6rem;
+  border: 1px solid hsl(var(--border));
+  border-radius: var(--radius);
+  background: hsl(var(--background) / 0.6);
+}
+
+.chord-card__head {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 0.6rem;
+}
+
+.chord-card__symbol {
+  font-family: var(--font-display), Georgia, serif;
+  font-size: 1.2rem;
+  color: hsl(var(--primary));
+}
+
+.chord-card__name {
+  font-size: 0.72rem;
+  color: hsl(var(--muted-foreground));
+  text-align: right;
+}
+
+/* The same absolute, percent-placed keys as the playing keyboard, small and
+   inert: a picture to read, not an instrument. */
+.chord-keys {
+  position: relative;
+  height: 5.25rem;
+  container-type: inline-size;
+  border-radius: 3px;
+  background: hsl(28 14% 9%);
+  overflow: hidden;
+}
+
+.chord-keys__key {
+  position: absolute;
+  top: 0;
+  height: 100%;
+  z-index: 1;
+  display: flex;
+  align-items: flex-end;
+  justify-content: center;
+  padding-bottom: 0.25rem;
+  border: 1px solid hsl(35 12% 62%);
+  border-top: 0;
+  border-radius: 0 0 3px 3px;
+  background: hsl(var(--key-white));
+  color: hsl(var(--primary-foreground));
+  font-size: clamp(8px, 3.6cqi, 11px);
+  font-weight: 700;
+  letter-spacing: -0.03em;
+  white-space: nowrap;
+}
+
+.chord-keys__key--black {
+  height: 60%;
+  z-index: 2;
+  border-color: hsl(0 0% 0%);
+  border-radius: 0 0 2px 2px;
+  background: hsl(var(--key-black));
+  font-size: clamp(8px, 3.4cqi, 10px);
+  letter-spacing: -0.06em;
+}
+
+/* The rest of the keyboard steps back, so the shape is what the eye finds. */
+.chord-keys__key:not(.is-lit) {
+  opacity: 0.55;
+}
+
+.chord-keys__key.is-lit {
+  background: linear-gradient(180deg, hsl(38 80% 74%), hsl(38 75% 62%));
+  border-color: hsl(38 60% 48%);
+}
+
+.chord-keys__key--black.is-lit {
+  background: linear-gradient(180deg, hsl(38 80% 62%), hsl(38 75% 48%));
+  border-color: hsl(38 60% 30%);
+}
+
+/* The root is where the hand starts, so it is the one key marked apart. */
+.chord-keys__key.is-root {
+  box-shadow: inset 0 -4px 0 hsl(var(--accent));
+}
+
+.chord-card__notes {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.15rem 0.8rem;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  font-size: 0.8rem;
+}
+
+.chord-card__notes li {
+  display: flex;
+  align-items: baseline;
+  gap: 0.25rem;
+}
+
+.chord-card__degree {
+  font-size: 0.68rem;
+  color: hsl(var(--muted-foreground));
+}
+
 /* ============================================================
    Small screens and touch
    ============================================================ */
@@ -1978,6 +2168,7 @@ button.theory__chip:hover {
   }
 
   .site-header__nav a,
+  .chords-toggle,
   .dev-toggle {
     padding-block: 0.6rem;
   }
