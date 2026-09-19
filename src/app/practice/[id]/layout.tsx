@@ -4,6 +4,8 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
+import { LessonNotes } from "@/components/LessonNotes";
+import { splitTip } from "@/lib/curriculum/teaching";
 import { exercises, exercisesIn, findExercise, LEVEL_TITLES, units } from "@/lib/curriculum/tree";
 
 export function generateStaticParams() {
@@ -25,6 +27,15 @@ export default function PracticeLayout({ children, params }: { children: React.R
   const prev = siblings[i - 1];
   const next = siblings[i + 1];
   const points = exercise.teachingPoints;
+  const { bpm } = exercise.mastery;
+  const pct = Math.round(exercise.mastery.accuracy * 100);
+  const bar =
+    exercise.kind === "improv"
+      ? [`A chorus at ${pct}%`, `${bpm} bpm or faster`]
+      : exercise.kind === "ear"
+        ? [`${pct}% first try`, "Without Show it"]
+        : [`${pct}% first try`, "No hints", ...(bpm ? [`Timed, ${bpm} bpm or faster`] : [])];
+  if (exercise.keys === "all") bar.push("All twelve keys");
 
   return (
     <main className="page page--lesson">
@@ -62,22 +73,13 @@ export default function PracticeLayout({ children, params }: { children: React.R
         <aside id="unit-notes" className="lesson-body__notes">
           <h2>{unit.title}</h2>
           <p>{unit.blurb}</p>
-          {points.length > 0 && (
-            <ul>
-              {points.map((p) => (
-                <li key={p}>{p}</li>
-              ))}
-            </ul>
-          )}
+          {points.length > 0 && <LessonNotes key={exercise.id} tips={points.map(splitTip)} />}
           <h2>To mark it done</h2>
-          <p>
-            {exercise.kind === "improv"
-              ? `A chorus scoring ${Math.round(exercise.mastery.accuracy * 100)} percent at ${exercise.mastery.bpm} or faster`
-              : exercise.kind === "ear"
-                ? `${Math.round(exercise.mastery.accuracy * 100)} percent first try, without pressing Show it`
-                : `${Math.round(exercise.mastery.accuracy * 100)} percent first try, no hints${exercise.mastery.bpm ? `, in Timed mode at ${exercise.mastery.bpm} or faster` : ""}`}
-            {exercise.keys === "all" ? ", in each of the twelve keys." : "."}
-          </p>
+          <ul className="lesson-body__bar">
+            {bar.map((chip) => (
+              <li key={chip}>{chip}</li>
+            ))}
+          </ul>
         </aside>
       </div>
 
