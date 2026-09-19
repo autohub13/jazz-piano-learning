@@ -39,7 +39,13 @@ export function KeyLegend({
   midi: MidiInputState;
 }) {
   return (
-    <div className="legend">
+    <details className="fold legend">
+      <summary className="fold__summary">
+        Ways to play the keys
+        <span className="fold__state">
+          {engineKind === "synth" ? "Synthesized piano" : midi.status === "connected" ? midi.deviceName : "Key names, typing and MIDI"}
+        </span>
+      </summary>
       <div className="legend__rows">
         <div className="legend__row">
           <span className="legend__caption">Lower octave</span>
@@ -63,11 +69,15 @@ export function KeyLegend({
         <span className={cn("legend__midi", midi.status === "connected" && "is-on")}>
           {MIDI_TEXT[midi.status](midi.deviceName)}
         </span>
-        <span>
+        <span className="legend__touch">
+          Tap the keys to play. The slider above them moves along the keyboard, and it follows the music on its
+          own. Turn the phone sideways to fit both hands.
+        </span>
+        <span className="legend__typing">
           Typing plays {midiToName(base, spelling)} to {midiToName(base + KEY_SPAN, spelling)}.
           Arrow up and down shift the octave.
         </span>
-        <span>
+        <span className="legend__typing">
           Most keyboards report only a few keys at once, so click the four-note chords
           with the mouse if typing them drops a note.
         </span>
@@ -85,6 +95,6 @@ export function KeyLegend({
           </select>
         </label>
       </div>
-    </div>
+    </details>
   );
 }

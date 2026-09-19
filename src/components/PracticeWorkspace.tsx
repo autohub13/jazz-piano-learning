@@ -501,9 +501,6 @@ export default function PracticeWorkspace({ exercise }: { exercise: Exercise }) 
         )}
       </div>
 
-      {keys.length > 1 && <KeyPicker current={keyName} done={doneKeys} onChange={changeKey} keys={keys} />}
-      {varied && mode !== "practice" && <VariationPicker value={variation} onChange={changeVariation} />}
-
       <div className={cn("cue", mode !== "listen" && `cue--${cueTone}`)}>
         {verdict ? (
           <>
@@ -574,9 +571,13 @@ export default function PracticeWorkspace({ exercise }: { exercise: Exercise }) 
 
       {(mode === "listen" || mode === "timed") && <HandLegend hands={lessonHands} />}
 
+      {keys.length > 1 && <KeyPicker current={keyName} done={doneKeys} onChange={changeKey} keys={keys} />}
+
       {lesson.harmony && mode === "listen" && (
         <TheoryPanel harmony={lesson.harmony} activeStep={activeIndex} selected={studying} detail={!running} notes={currentStep?.notes ?? EMPTY_NOTES} spelling={lesson.spelling} hands={hands} onSelect={setStudying} />
       )}
+
+      {varied && mode !== "practice" && <VariationPicker value={variation} onChange={changeVariation} />}
 
       <KeyLegend base={base} spelling={lesson.spelling} labelMode={labelMode} onLabelMode={setLabelMode} engineKind={engine.kind} midi={midi} />
     </div>

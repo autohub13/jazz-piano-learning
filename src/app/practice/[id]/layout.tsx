@@ -28,24 +28,38 @@ export default function PracticeLayout({ children, params }: { children: React.R
 
   return (
     <main className="page page--lesson">
-      <nav className="crumbs">
-        <Link href="/">Today</Link>
-        <span className="crumbs__sep">/</span>
-        <Link href={`/path#level-${exercise.level}`}>
-          Level {exercise.level}: {LEVEL_TITLES[exercise.level]}
-        </Link>
-        <span className="crumbs__sep">/</span>
-        <span>{unit.title}</span>
-      </nav>
+      <div className="lesson-top">
+        <nav className="crumbs">
+          <Link href="/">Today</Link>
+          <span className="crumbs__sep">/</span>
+          <Link href={`/path#level-${exercise.level}`}>
+            Level {exercise.level}: {LEVEL_TITLES[exercise.level]}
+          </Link>
+          <span className="crumbs__sep">/</span>
+          <span>{unit.title}</span>
+        </nav>
+        <nav className="lesson-step" aria-label="Exercises in this unit">
+          {prev && <Link href={`/practice/${prev.id}`}>Back</Link>}
+          <span>
+            {i + 1} of {siblings.length}
+          </span>
+          {next && <Link href={`/practice/${next.id}`}>Next</Link>}
+        </nav>
+      </div>
 
       <header className="lesson-head">
         <h1 className="lesson-head__title">{exercise.title}</h1>
-        <p className="lesson-head__tagline">{exercise.blurb}</p>
+        <p className="lesson-head__tagline">
+          {exercise.blurb}{" "}
+          <a href="#unit-notes" className="lesson-head__jump">
+            Read the notes
+          </a>
+        </p>
       </header>
 
       <div className="lesson-body">
         <div className="lesson-body__player">{children}</div>
-        <aside className="lesson-body__notes">
+        <aside id="unit-notes" className="lesson-body__notes">
           <h2>{unit.title}</h2>
           <p>{unit.blurb}</p>
           {points.length > 0 && (

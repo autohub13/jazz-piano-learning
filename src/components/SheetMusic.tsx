@@ -1,20 +1,35 @@
 "use client";
 
-// The right hand on a staff, four bars to a line, with the chord symbols over
+// The right hand on a staff, four bars to a line (two on a phone), with the chord symbols over
 // it: a lead sheet. The note under the music is lit, so the eye learns to find
 // on paper what the ear is hearing. Drawn as plain SVG; a lead sheet line is a
 // small enough subset of notation not to need an engraving library.
 
-import { memo, useMemo, useState } from "react";
+import { memo, useEffect, useMemo, useState } from "react";
 import type { Lesson } from "@/lib/lessons/types";
 import { sheetOf, type Sheet, type StaffEvent } from "@/lib/lessons/notation";
 import { cn } from "@/lib/utils";
 import { LeadSheet } from "./LeadSheet";
 
-const BARS_PER_ROW = 4;
-const WIDTH = 1000;
 const CLEF = 46;
-const BAR = (WIDTH - CLEF - 2) / BARS_PER_ROW;
+const BAR = 238;
+
+/**
+ * Four bars to a line, or two where the screen is narrow. The drawing is
+ * scaled to the width it is given, so four bars on a phone would be a third
+ * of the size they are on a desk.
+ */
+function useBarsPerRow(): number {
+  const [narrow, setNarrow] = useState(false);
+  useEffect(() => {
+    const query = window.matchMedia("(max-width: 640px)");
+    const update = () => setNarrow(query.matches);
+    update();
+    query.addEventListener("change", update);
+    return () => query.removeEventListener("change", update);
+  }, []);
+  return narrow ? 2 : 4;
+}
 /** Half the distance between two staff lines: one diatonic step. */
 const HALF = 6;
 /** E4, the bottom line. */
@@ -83,6 +98,7 @@ function onPress(run: () => void) {
 function Row({
   sheet,
   row,
+  perRow,
   activeIndex,
   yOf,
   height,
@@ -90,13 +106,15 @@ function Row({
 }: {
   sheet: Sheet;
   row: number;
+  perRow: number;
   activeIndex: number;
   yOf: (step: number) => number;
   height: number;
   onBar?: (bar: number) => void;
 }) {
-  const first = row * BARS_PER_ROW;
-  const count = Math.min(BARS_PER_ROW, sheet.bars - first);
+  const first = row * perRow;
+  const count = Math.min(perRow, sheet.bars - first);
+  const width = CLEF + perRow * BAR + 2;
   const barX = (bar: number) => CLEF + (bar - first) * BAR;
   const xOf = (bar: number, pos: number) => barX(bar) + 20 + (pos / sheet.beatsPerBar) * (BAR - 32);
   const inRow = (bar: number) => bar >= first && bar < first + count;
@@ -106,7 +124,7 @@ function Row({
   const bottom = yOf(BOTTOM_STEP);
 
   return (
-    <svg className="sheet__row" viewBox={`0 0 ${WIDTH} ${height}`} role={onBar ? "group" : "img"} aria-label={`Bars ${first + 1} to ${first + count}`}>
+    <svg className="sheet__row" viewBox={`0 0 ${width} ${height}`} role={onBar ? "group" : "img"} aria-label={`Bars ${first + 1} to ${first + count}`}>
       {inRow(activeBar) && <rect className="sheet__now" x={barX(activeBar)} y={top - 8} width={BAR} height={bottom - top + 16} />}
       {[0, 2, 4, 6, 8].map((s) => (
         <line key={s} className="sheet__line" x1={0} x2={CLEF + count * BAR} y1={yOf(BOTTOM_STEP + s)} y2={yOf(BOTTOM_STEP + s)} />
@@ -175,6 +193,7 @@ function Row({
 function SheetMusicImpl({ lesson, activeIndex, onBar }: { lesson: Lesson; activeIndex: number; onBar?: (bar: number) => void }) {
   const sheet = useMemo(() => sheetOf(lesson), [lesson]);
   const [view, setView] = useState<"line" | "all">("line");
+  const perRow = useBarsPerRow();
   // A left hand alone is comping, and comping is read from a chord chart.
   if (!sheet) return lesson.harmony ? <LeadSheet lesson={lesson} activeIndex={activeIndex} onBar={onBar} /> : null;
 
@@ -187,10 +206,10 @@ function SheetMusicImpl({ lesson, activeIndex, onBar }: { lesson: Lesson; active
   const yOf = (step: number) => staffTop + 8 * HALF - (step - BOTTOM_STEP) * HALF;
   const height = staffTop + 8 * HALF + below + 22;
 
-  const rows = Math.ceil(sheet.bars / BARS_PER_ROW);
+  const rows = Math.ceil(sheet.bars / perRow);
   // One line at a time follows the music, so the staff, the chord panel and
   // the keyboard all stay on one screen. Before it starts, that is line one.
-  const current = activeIndex >= 0 ? Math.floor(sheet.barOfStep[activeIndex] / BARS_PER_ROW) : 0;
+  const current = activeIndex >= 0 ? Math.floor(sheet.barOfStep[activeIndex] / perRow) : 0;
   const shown = view === "line" ? [Math.min(current, rows - 1)] : Array.from({ length: rows }, (_, row) => row);
 
   return (
@@ -220,7 +239,7 @@ function SheetMusicImpl({ lesson, activeIndex, onBar }: { lesson: Lesson; active
         </div>
       )}
       {shown.map((row) => (
-        <Row key={row} sheet={sheet} row={row} activeIndex={activeIndex} yOf={yOf} height={height} onBar={onBar} />
+        <Row key={row} sheet={sheet} row={row} perRow={perRow} activeIndex={activeIndex} yOf={yOf} height={height} onBar={onBar} />
       ))}
     </div>
   );

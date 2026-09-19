@@ -38,8 +38,14 @@ export function VariationPicker({
   value: Variation;
   onChange(next: Variation): void;
 }) {
+  const changed = AXES.filter(({ axis }) => value[axis] !== "written").map(({ axis, names }) => names[value[axis]]);
+
   return (
-    <div className="variations">
+    <details className="fold variations">
+      <summary className="fold__summary">
+        Change the arrangement
+        <span className="fold__state">{changed.length > 0 ? changed.join(", ") : "As written"}</span>
+      </summary>
       {AXES.map(({ axis, caption, names }) => (
         <div key={axis} className="keypick">
           <span className="keypick__caption variations__caption">{caption}</span>
@@ -62,6 +68,6 @@ export function VariationPicker({
       <span className="keypick__meta">
         Changes are heard straight away. Practice always uses the version as written.
       </span>
-    </div>
+    </details>
   );
 }

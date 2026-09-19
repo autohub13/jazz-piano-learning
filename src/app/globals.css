@@ -41,6 +41,9 @@
     --key-black: 28 12% 12%;
 
     --radius: 0.5rem;
+
+    /* Narrowest a white key may be. A mouse can hit 20px; a finger cannot. */
+    --key-min: 1.25rem;
   }
 
   * {
@@ -238,10 +241,6 @@
 .theory {
   display: grid;
   gap: 0.7rem;
-  padding: 0.85rem 1rem 0.95rem;
-  border: 1px solid hsl(var(--border));
-  border-radius: calc(var(--radius) - 2px);
-  background: hsl(var(--card) / 0.6);
 }
 
 .theory__chips {
@@ -576,6 +575,50 @@ button.theory__chip:hover {
   text-decoration: underline;
 }
 
+.lesson-top {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: space-between;
+  align-items: baseline;
+  gap: 0.4rem 1.5rem;
+  margin-bottom: 1.25rem;
+}
+
+.lesson-top .crumbs {
+  margin-bottom: 0;
+}
+
+.lesson-step {
+  display: flex;
+  gap: 0.8rem;
+  font-size: 0.8rem;
+  color: hsl(var(--muted-foreground));
+  font-variant-numeric: tabular-nums;
+}
+
+.lesson-step a,
+.lesson-head__jump {
+  color: hsl(var(--primary));
+  text-decoration: none;
+}
+
+.lesson-step a:hover,
+.lesson-head__jump:hover {
+  text-decoration: underline;
+}
+
+.lesson-head__jump {
+  font-size: 0.85rem;
+  white-space: nowrap;
+}
+
+/* Beside the player the notes are already in view. */
+@media (min-width: 1000px) {
+  .lesson-head__jump {
+    display: none;
+  }
+}
+
 .lesson-head__title {
   font-size: clamp(1.6rem, 3.6vw, 2.35rem);
   margin: 0 0 0.35rem;
@@ -858,12 +901,9 @@ button.theory__chip:hover {
 .cue {
   display: grid;
   gap: 0.2rem;
-  padding: 0.85rem 1.1rem;
-  border: 1px solid hsl(var(--border));
-  border-left-width: 3px;
-  border-radius: calc(var(--radius) - 2px);
-  background: hsl(var(--card));
-  min-height: 4.2rem;
+  padding: 0.2rem 0 0.2rem 1rem;
+  border-left: 3px solid hsl(var(--border));
+  min-height: 3.4rem;
   transition: border-color 0.18s ease;
 }
 
@@ -931,16 +971,46 @@ button.theory__chip:hover {
 
 /* ---------- the keyboard ---------- */
 
+/* The keys never get narrower than --key-min, so on a small screen the
+   keyboard is wider than its frame and scrolls inside it. */
+.piano-wrap {
+  display: grid;
+  gap: 0.5rem;
+}
+
+.piano-scroll {
+  overflow-x: auto;
+  overscroll-behavior-x: contain;
+  scrollbar-width: none;
+  border-radius: calc(var(--radius) - 2px);
+  box-shadow: 0 14px 34px hsl(0 0% 0% / 0.5);
+}
+
+.piano-scroll::-webkit-scrollbar {
+  display: none;
+}
+
+/* The slider that moves along the keyboard. A touch on a key plays it, so
+   panning needs a control of its own. */
+.piano-map {
+  width: 100%;
+  height: 1.75rem;
+  margin: 0;
+  accent-color: hsl(var(--primary));
+  touch-action: pan-y;
+}
+
 .piano {
   position: relative;
   width: 100%;
+  min-width: calc(var(--whites, 0) * var(--key-min));
   height: clamp(130px, 24vw, 210px);
   container-type: inline-size;
   border-radius: calc(var(--radius) - 2px);
   /* A felt strip and a lid shadow, so the keys sit in something. */
   background: linear-gradient(180deg, hsl(350 40% 22%) 0 6px, hsl(28 14% 9%) 6px);
   padding-top: 6px;
-  box-shadow: 0 14px 34px hsl(0 0% 0% / 0.5), inset 0 0 0 1px hsl(var(--border));
+  box-shadow: inset 0 0 0 1px hsl(var(--border));
   overflow: hidden;
   /* Fast repeated taps must reach the keys, not the native select-text and
      callout gestures. */
@@ -1076,10 +1146,6 @@ button.theory__chip:hover {
 .legend {
   display: grid;
   gap: 0.85rem;
-  padding: 0.9rem 1.1rem 1rem;
-  border: 1px solid hsl(var(--border));
-  border-radius: calc(var(--radius) - 2px);
-  background: hsl(var(--card) / 0.6);
 }
 
 .legend__rows {
@@ -1166,6 +1232,51 @@ button.theory__chip:hover {
 .variations {
   display: grid;
   gap: 0.45rem;
+}
+
+/* Settings you change once, if at all: closed until asked for. */
+.fold {
+  padding: 0;
+  border: 0;
+  border-top: 1px solid hsl(var(--border));
+  border-radius: 0;
+  background: none;
+}
+
+.fold__summary {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 0.2rem 0.75rem;
+  padding: 0.7rem 0;
+  font-size: 0.85rem;
+  font-weight: 500;
+  cursor: pointer;
+  list-style: none;
+}
+
+.fold__summary::-webkit-details-marker {
+  display: none;
+}
+
+.fold__summary::before {
+  content: "+";
+  width: 0.8rem;
+  color: hsl(var(--primary));
+}
+
+.fold[open] > .fold__summary::before {
+  content: "\2212";
+}
+
+.fold__state {
+  font-size: 0.78rem;
+  font-weight: 400;
+  color: hsl(var(--muted-foreground));
+}
+
+.fold[open] {
+  padding-bottom: 0.9rem;
 }
 
 .variations__caption {
@@ -1691,4 +1802,408 @@ button.theory__chip:hover {
 .dev-toggle.is-on {
   border-color: hsl(var(--accent) / 0.8);
   color: hsl(var(--accent));
+}
+
+/* ============================================================
+   Small screens and touch
+   ============================================================ */
+
+/* The typing legend is for a computer keyboard, the touch note for a phone. */
+.legend__touch {
+  display: none;
+}
+
+/* A finger, not a mouse: bigger keys, bigger targets, no hover lift. */
+@media (pointer: coarse) {
+  :root {
+    --key-min: 2.5rem;
+  }
+
+  .piano {
+    height: clamp(160px, 42vw, 220px);
+  }
+
+  .btn,
+  .mode-tab {
+    min-height: 2.75rem;
+  }
+
+  .keypick__chip {
+    min-width: 2.75rem;
+    min-height: 2.5rem;
+    padding-inline: 0.7rem;
+  }
+
+  .theory__chip {
+    min-height: 2.5rem;
+  }
+
+  .site-header__nav a,
+  .dev-toggle {
+    padding-block: 0.6rem;
+  }
+
+  .tempo input,
+  .piano-map {
+    height: 2.75rem;
+  }
+
+  /* Under 16px, iOS zooms the page when a control takes focus. */
+  .legend__toggle select {
+    font-size: 1rem;
+    padding: 0.4rem 0.5rem;
+  }
+
+  button,
+  a,
+  select,
+  [role="button"] {
+    touch-action: manipulation;
+    -webkit-tap-highlight-color: transparent;
+  }
+
+  .legend__rows,
+  .legend__typing {
+    display: none;
+  }
+
+  .legend__touch {
+    display: inline;
+  }
+}
+
+@media (hover: none) {
+  .btn:hover:not(:disabled),
+  .lesson-card:hover,
+  .stage__play:hover:not(:disabled) {
+    transform: none;
+  }
+}
+
+@media (max-width: 640px) {
+  body {
+    /* A fixed background repaints on every scroll frame on a phone. */
+    background-attachment: scroll;
+  }
+
+  .site-header {
+    align-items: center;
+    padding: 0.5rem 1rem;
+    padding-left: max(1rem, env(safe-area-inset-left));
+    padding-right: max(1rem, env(safe-area-inset-right));
+  }
+
+  /* One line where it fits. On the narrowest phones the nav drops under the
+     brand whole, and nothing breaks mid-word. */
+  .site-header {
+    flex-wrap: wrap;
+    row-gap: 0.1rem;
+  }
+
+  .site-header__brand,
+  .site-header__nav a,
+  .dev-toggle {
+    white-space: nowrap;
+  }
+
+  .site-header__brand {
+    font-size: 1.05rem;
+  }
+
+  .site-header__nav {
+    gap: 0.7rem;
+  }
+
+  .dev-toggle {
+    font-size: 0.62rem;
+    letter-spacing: 0.06em;
+    padding-inline: 0.45rem;
+  }
+
+  .page {
+    padding: 1.5rem 1rem 1rem;
+    padding-left: max(1rem, env(safe-area-inset-left));
+    padding-right: max(1rem, env(safe-area-inset-right));
+  }
+
+  .site-footer {
+    padding: 2rem 1rem calc(2rem + env(safe-area-inset-bottom));
+  }
+
+  .hero {
+    margin-bottom: 2rem;
+  }
+
+  .hero__actions .btn {
+    flex: 1 1 auto;
+    justify-content: center;
+  }
+
+  .crumbs {
+    flex-wrap: wrap;
+    gap: 0.3rem 0.5rem;
+    margin-bottom: 0.9rem;
+  }
+
+  .lesson-head__tagline {
+    margin-bottom: 1.25rem;
+  }
+
+  /* Dashboard: the badge and the minutes share a line, the words get the rest. */
+  .queue__item {
+    grid-template-columns: 1fr auto;
+    grid-template-areas: "reason minutes" "title title" "blurb blurb";
+    gap: 0.3rem 0.6rem;
+    padding: 0.8rem 0.9rem;
+  }
+
+  .queue__reason {
+    justify-self: start;
+    min-width: 0;
+  }
+
+  .levels__list a {
+    grid-template-columns: 1.6rem minmax(0, 1fr) auto;
+    grid-template-areas: "num title count" "num bar bar";
+    gap: 0.35rem 0.6rem;
+    padding: 0.6rem 0.5rem;
+  }
+
+  .levels__num {
+    grid-area: num;
+  }
+
+  .levels__title {
+    grid-area: title;
+  }
+
+  .levels__bar {
+    grid-area: bar;
+  }
+
+  .levels__count {
+    grid-area: count;
+  }
+
+  .dashboard,
+  .tree {
+    gap: 2rem;
+  }
+
+  /* Workspace: each group of controls gets the full width. */
+  .workspace__bar {
+    display: grid;
+    gap: 0.6rem;
+  }
+
+  .mode-tabs {
+    display: flex;
+  }
+
+  .mode-tab {
+    flex: 1;
+    justify-content: center;
+    padding-inline: 0.4rem;
+  }
+
+  .transport .btn {
+    flex: 1 1 auto;
+    justify-content: center;
+  }
+
+  .tempo {
+    flex: 1 1 100%;
+  }
+
+  .tempo input {
+    flex: 1;
+    width: auto;
+  }
+
+  .keypick {
+    align-items: flex-start;
+  }
+
+  .keypick__caption,
+  .variations__caption {
+    flex-basis: 100%;
+    min-width: 0;
+  }
+
+  .cue__label {
+    font-size: 1.05rem;
+    overflow-wrap: anywhere;
+  }
+
+  .gate {
+    padding: 2rem 1.1rem;
+  }
+
+  .meter {
+    padding-inline: 0.85rem;
+  }
+
+  .lesson-body__notes {
+    padding: 1rem;
+  }
+
+  .lesson-body__notes li {
+    font-size: 0.92rem;
+  }
+
+  .lesson-nav {
+    flex-direction: column;
+  }
+
+  .lesson-nav .btn {
+    justify-content: center;
+  }
+
+  .lesson-card__links {
+    flex-wrap: wrap;
+  }
+
+  .payoff {
+    padding: 1.2rem 1.1rem 1.4rem;
+  }
+
+  /* Two chords in a bar have a quarter of a phone's width between them. */
+  .leadsheet__bar {
+    flex-wrap: wrap;
+    gap: 0 0.35rem;
+    min-height: 2.9rem;
+    padding: 0.3rem 0.35rem;
+    font-size: 0.88rem;
+  }
+
+  .sheet {
+    padding: 0.5rem 0.4rem;
+  }
+
+  .meter__stats {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+/* A phone on its side: little height, so spend it on the keys. */
+@media (orientation: landscape) and (max-height: 480px) {
+  .site-header {
+    padding-block: 0.3rem;
+    padding-left: max(1rem, env(safe-area-inset-left));
+    padding-right: max(1rem, env(safe-area-inset-right));
+  }
+
+  .page {
+    padding-top: 0.9rem;
+    padding-left: max(1rem, env(safe-area-inset-left));
+    padding-right: max(1rem, env(safe-area-inset-right));
+  }
+
+  .lesson-head__title {
+    font-size: 1.4rem;
+  }
+
+  .lesson-head__tagline {
+    margin-bottom: 0.8rem;
+  }
+
+  .lesson-top {
+    margin-bottom: 0.6rem;
+  }
+
+  /* Modes and transport on one row, where the width allows. */
+  .workspace__bar {
+    gap: 0.5rem;
+  }
+
+  .mode-tab {
+    padding-inline: 0.55rem;
+  }
+
+  .transport .btn {
+    padding-inline: 0.6rem;
+  }
+
+  /* Out of sight, still the slider's name. */
+  .tempo__label {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    overflow: hidden;
+    clip-path: inset(50%);
+    white-space: nowrap;
+  }
+
+  .tempo input {
+    width: 5rem;
+  }
+
+  /* The cue, the music and the keys fit one screen together. */
+  .workspace {
+    gap: 0.5rem;
+  }
+
+  .piano {
+    height: min(46vh, 180px);
+  }
+
+  .cue {
+    min-height: 0;
+  }
+}
+
+/* A phone held upright: ask for it on its side, where the keyboard fits. */
+.rotate-prompt {
+  display: none;
+}
+
+@media (orientation: portrait) and (pointer: coarse) and (max-width: 640px) {
+  .rotate-prompt {
+    position: fixed;
+    inset: 0;
+    z-index: 50;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 0.9rem;
+    padding: 2rem;
+    padding-bottom: calc(2rem + env(safe-area-inset-bottom));
+    text-align: center;
+    background: hsl(var(--background));
+  }
+
+  .rotate-prompt__icon {
+    width: 3.5rem;
+    height: 3.5rem;
+    color: hsl(var(--primary));
+  }
+
+  @media (prefers-reduced-motion: no-preference) {
+    .rotate-prompt__icon {
+      animation: rotate-hint 2.4s ease-in-out infinite;
+    }
+  }
+
+  .rotate-prompt__title {
+    margin: 0;
+    font-size: 1.5rem;
+  }
+
+  .rotate-prompt__text {
+    margin: 0 0 0.6rem;
+    max-width: 22rem;
+    color: hsl(var(--muted-foreground));
+  }
+}
+
+@keyframes rotate-hint {
+  0%,
+  25% {
+    transform: rotate(0deg);
+  }
+  60%,
+  100% {
+    transform: rotate(-90deg);
+  }
 }
