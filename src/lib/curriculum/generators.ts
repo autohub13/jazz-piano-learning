@@ -3,12 +3,12 @@
 // degrees, and a tune comes from the library. All of it goes through the same
 // arranger, so a drill and a tune agree on what a chord is.
 
-import { arrange, closeUnder, guideToneMelody, numeralFor, ticks, type Variation } from "@/lib/arrange/arrange";
+import { arrange, closeUnder, guideToneMelody, numeralFor, ticks, TPB, type NoteEvent, type Variation } from "@/lib/arrange/arrange";
 import { bassLine, guitarComp, type BassChord } from "@/lib/arrange/bass";
 import { arrangeTune, chartFromTune, levelVariation } from "@/lib/arrange/tune";
 import { KEYS, type KeyName } from "@/lib/lessons/transpose";
 import type { BandChart, Finger, Hand, HarmonyRegion, Lesson, LessonStep } from "@/lib/lessons/types";
-import { parseChord, rootOnDegree, type Quality } from "@/lib/music/chords";
+import { parseChord, rootOnDegree, type Degree, type Quality } from "@/lib/music/chords";
 import { degreeName } from "@/lib/music/harmony";
 import { isBlackKey, pitchClass, pitchClassName, type Midi, type Spelling } from "@/lib/music/notes";
 import { voicingForms, type VoicingStyle } from "@/lib/music/voicings";
@@ -84,6 +84,53 @@ const QUALITY_RECIPE: Record<Quality, string> = {
 /** Bass, guitar and drums under a drill, one chord per entry, from beat zero. */
 function drillBand(chords: BassChord[]): BandChart {
   return { startBeat: 0, beatsPerBar: 4, bass: bassLine(chords, "swing", 4), comp: guitarComp(chords) };
+}
+
+/**
+ * A scale in swung eighths, the way a line uses it. A seven-note scale runs up
+ * a bar to the octave and back down a bar. The bebop scale has eight notes, so
+ * a bar of eighths from root to root keeps its chord tones on the beats: down
+ * first, because that is the way bebop lines mostly run, then up.
+ */
+export function scaleLine(kind: ScaleKind, key: KeyName): Lesson {
+  const rootPc = keyPc(key);
+  const root = 60 + rootPc;
+  const spelling = spellingFor(key);
+  const up = SCALES[kind].map((s) => root + s);
+  const eighths = (notes: Midi[]): LessonStep[] =>
+    notes.map((note, i) => ({
+      notes: [note],
+      beats: i % 2 === 0 ? 2 / 3 : 1 / 3,
+      label: pitchClassName(note, spelling),
+      hand: "right" as const,
+    }));
+  const held = (note: Midi, beats: number): LessonStep => ({
+    notes: [note],
+    beats,
+    label: pitchClassName(note, spelling),
+    hand: "right",
+  });
+  let steps: LessonStep[];
+  let bars: number;
+  if (up.length === 8) {
+    const down = [root + 12, ...[...up].reverse().slice(0, 7)];
+    steps = [...eighths(down), held(root, 4), ...eighths(up), held(root + 12, 4)];
+    bars = 4;
+  } else {
+    // Up to the octave on the and of four, down to the root on beat four.
+    const down = [...up].reverse();
+    steps = [...eighths([...up, root + 12]), ...eighths(down.slice(0, 6)), held(root, 1)];
+    bars = 2;
+  }
+  const lesson = scaleDrill(kind, key);
+  return {
+    ...lesson,
+    tagline: "In swung eighths: long, short, long, short.",
+    steps,
+    band: drillBand(
+      Array.from({ length: bars }, () => ({ symbol: pitchClassName(rootPc, spelling) + SCALE_CHORD[kind], beats: 4 })),
+    ),
+  };
 }
 
 export function scaleDrill(kind: ScaleKind, key: KeyName): Lesson {
@@ -367,20 +414,79 @@ export function guideToneEtude(p: Progression, key: KeyName, v: Variation): Less
   return { ...lesson, steps, harmony, band, range: chart.range, tagline: "The 3rds and 7ths, and a line hung on them." };
 }
 
+/**
+ * The progression as arpeggios, a note a beat: the given degrees of each chord
+ * going up, and coming back down when the chord lasts long enough. Chord tones
+ * are what a line lands on, so they are drilled before any scale is.
+ */
+export function arpeggioEtude(p: Progression, key: KeyName, degrees: readonly Degree[], v: Variation): Lesson {
+  const tune = progressionTune(p, key);
+  const chart = chartFromTune(tune, key);
+  const melody: NoteEvent[] = [];
+  for (const c of chart.chords) {
+    const chord = parseChord(c.symbol);
+    // The lowest note at middle C or just above, each one above the last.
+    const up: Midi[] = [];
+    for (const d of degrees) {
+      let n = 60 + pitchClass(chord.rootPc + chord.degrees[d] - 60);
+      while (up.length > 0 && n <= up[up.length - 1]) n += 12;
+      up.push(n);
+    }
+    const line = [...up, ...[...up].reverse()];
+    for (let beat = 0; beat * TPB < c.len; beat++) {
+      melody.push({ start: c.start + beat * TPB, len: TPB, notes: [line[beat % line.length]] });
+    }
+  }
+  chart.melody = melody;
+  chart.range = whiteRange(Math.min(chart.range.low, 45), Math.max(chart.range.high, ...melody.map((e) => e.notes[0] + 2)));
+  const { steps, harmony, band } = arrange(chart, v);
+  const lesson = arrangeTune(tune, key, v);
+  return { ...lesson, steps, harmony, band, range: chart.range, topic: "progression", tagline: "Each chord a note at a time, up and back." };
+}
+
 export function tuneLesson(tune: Tune, key: KeyName, level: number): Lesson {
   return arrangeTune(tune, key, levelVariation(level));
 }
 
 // Ear training
 
-export type EarKind = "quality" | "cadence";
+export type EarKind = "interval" | "triad" | "seventh" | "quality" | "cadence";
 
-/** A fixed, key-dependent sequence, so the same test is the same test. */
+const INTERVAL_NAMES: Record<number, string> = { 3: "minor 3rd", 4: "major 3rd", 7: "perfect 5th", 10: "flat 7th", 11: "major 7th" };
+
+const EAR_TITLES: Record<EarKind, (key: KeyName) => string> = {
+  interval: (key) => `Hear the interval above ${key}`,
+  triad: (key) => `Major or minor, in ${key}`,
+  seventh: (key) => `Hear the seventh chord on ${key}`,
+  quality: (key) => `Hear the quality on ${key}`,
+  cadence: (key) => `Hear the cadence in ${key}`,
+};
+
+/** The prompts of an ear drill. The session shuffles them, so the order here
+ *  is never the order heard. */
 export function earLesson(kind: EarKind, key: KeyName): Lesson {
   const spelling = spellingFor(key);
   const rootName = pitchClassName(keyPc(key), spelling);
   const steps: LessonStep[] = [];
-  if (kind === "quality") {
+  // Around middle C, where a beginner's ear is surest.
+  const root = 55 + pitchClass(keyPc(key) - 55);
+  if (kind === "interval") {
+    for (const semis of [4, 3, 7, 10, 11, 3, 4, 7, 11, 10]) {
+      steps.push({ notes: [root, root + semis], beats: 4, label: INTERVAL_NAMES[semis], hand: "right" });
+    }
+  } else if (kind === "triad") {
+    // Major and minor on the I, IV and V roots, so the root has to be heard too.
+    for (const [degree, third] of [[0, 4], [0, 3], [5, 4], [7, 3], [5, 3], [7, 4], [0, 3], [5, 4]]) {
+      const r = root + degree;
+      const name = pitchClassName(r, spelling) + (third === 3 ? "m" : "");
+      steps.push({ notes: [r, r + third, r + 7], beats: 4, label: name, hand: "right" });
+    }
+  } else if (kind === "seventh") {
+    for (const q of ["maj7", "7", "m7", "m7b5", "7", "maj7", "m7b5", "m7"] as const) {
+      const d = parseChord(`${rootName}${q}`).degrees;
+      steps.push({ notes: [root, root + d[3], root + d[5], root + d[7]], beats: 4, label: `${rootName}${q}`, hand: "right" });
+    }
+  } else if (kind === "quality") {
     const order: Quality[] = ["maj7", "m7", "7", "m7b5", "dim7", "6", "m6", "7"];
     // Rotate by key so the drill differs from key to key.
     const start = keyPc(key) % order.length;
@@ -399,7 +505,7 @@ export function earLesson(kind: EarKind, key: KeyName): Lesson {
   }
   const all = steps.flatMap((s) => s.notes);
   return {
-    ...base(key, `ear-${kind}`, kind === "quality" ? `Hear the quality on ${key}` : `Hear the cadence in ${key}`, ""),
+    ...base(key, `ear-${kind}`, EAR_TITLES[kind](key), ""),
     range: whiteRange(Math.min(45, ...all) - 2, Math.max(79, ...all) + 2),
     keyboardBase: 48,
     defaultBpm: 60,

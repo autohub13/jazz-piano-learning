@@ -2,18 +2,23 @@
 
 // Ear training. A chord sounds, the learner plays it back. Only pitch classes
 // count, so a voicing heard low and played high is still right: the ear is
-// being tested, not the octave.
+// being tested, not the octave. The prompts come in a new order every run, so
+// the answers cannot be learned by position.
 
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import type { PianoEngine } from "@/lib/audio/pianoEngine";
 import type { Lesson } from "@/lib/lessons/types";
+import { shuffledOrder } from "@/lib/grading/ear";
 import { pitchClass, type Midi } from "@/lib/music/notes";
 
 const EMPTY: ReadonlySet<Midi> = new Set();
 const ADVANCE_MS = 700;
 
 export interface EarSession {
+  /** How many prompts have gone by. */
   index: number;
+  /** The step of the lesson being asked now. */
+  stepIndex: number;
   held: ReadonlySet<Midi>;
   status: "listen" | "answering" | "correct" | "wrong" | "finished";
   /** How many wrong answers on this prompt. */
@@ -33,6 +38,9 @@ export interface EarSession {
 
 export function useEarSession(engine: PianoEngine | null, lesson: Lesson, enabled: boolean): EarSession {
   const [index, setIndex] = useState(0);
+  const [order, setOrder] = useState<number[]>(() => shuffledOrder(lesson.steps));
+  const orderRef = useRef(order);
+  orderRef.current = order;
   const [held, setHeld] = useState<ReadonlySet<Midi>>(EMPTY);
   const [status, setStatus] = useState<EarSession["status"]>("listen");
   const [attempts, setAttempts] = useState(0);
@@ -54,7 +62,7 @@ export function useEarSession(engine: PianoEngine | null, lesson: Lesson, enable
   const syncHeld = useCallback(() => setHeld(new Set(heldRef.current)), []);
 
   const play = useCallback(() => {
-    const step = lesson.steps[indexRef.current];
+    const step = lesson.steps[orderRef.current[indexRef.current]];
     const eng = engineRef.current;
     if (!step || !eng) return;
     eng.stop();
@@ -87,7 +95,7 @@ export function useEarSession(engine: PianoEngine | null, lesson: Lesson, enable
       heldRef.current.add(midi);
       syncHeld();
       if (statusRef.current !== "answering" && statusRef.current !== "wrong") return;
-      const step = lesson.steps[indexRef.current];
+      const step = lesson.steps[orderRef.current[indexRef.current]];
       if (!step) return;
       const target = new Set(step.notes.map(pitchClass));
       const have = new Set([...heldRef.current].map(pitchClass));
@@ -124,13 +132,19 @@ export function useEarSession(engine: PianoEngine | null, lesson: Lesson, enable
   const restart = useCallback(() => {
     if (timerRef.current) clearTimeout(timerRef.current);
     releaseAll();
+    setOrder(shuffledOrder(lesson.steps));
     setIndex(0);
     setAttempts(0);
     setResults([]);
     setRevealed(false);
     setHintUsed(false);
     setStatus("listen");
-  }, [releaseAll]);
+  }, [releaseAll, lesson.steps]);
+
+  // A new key is a new lesson: deal again.
+  useEffect(() => {
+    setOrder(shuffledOrder(lesson.steps));
+  }, [lesson.steps]);
 
   useEffect(() => {
     if (enabled) return;
@@ -147,5 +161,7 @@ export function useEarSession(engine: PianoEngine | null, lesson: Lesson, enable
     [results],
   );
 
-  return { index, held, status, attempts, revealed, hintUsed, results, accuracy, play, reveal, noteDown, noteUp, releaseAll, restart };
+  const stepIndex = order[index] ?? index;
+
+  return { index, stepIndex, held, status, attempts, revealed, hintUsed, results, accuracy, play, reveal, noteDown, noteUp, releaseAll, restart };
 }

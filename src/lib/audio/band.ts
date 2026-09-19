@@ -12,10 +12,8 @@
 // are no timers in this file.
 
 import type { BandChart } from "@/lib/lessons/types";
+import { playedBeat, swingAnd } from "@/lib/lessons/timeline";
 import { midiToFreq, type Midi } from "@/lib/music/notes";
-
-/** Where the offbeat sits inside the beat. Two thirds is a triplet swing. */
-const SWING = 2 / 3;
 
 export interface ScheduleOptions {
   /** Absolute AudioContext time of beat zero of the loop. */
@@ -326,7 +324,7 @@ export function createBand(ctx: AudioContext, chart: BandChart): Band {
 
         ride(t, downbeat ? 0.1 : 0.075, downbeat ? 0.5 : 0.4);
         if (backbeat) {
-          ride(t + SWING * spb, 0.05, 0.26);
+          ride(t + swingAnd(bpm) * spb, 0.05, 0.26);
           hat(t);
         }
         if (downbeat) kick(t);
@@ -346,7 +344,7 @@ export function createBand(ctx: AudioContext, chart: BandChart): Band {
         [horns, chart.ensemble?.horns ?? []],
       ] as const) {
         for (const h of hits) {
-          const t = t0 + (chart.startBeat + h.beat) * spb;
+          const t = t0 + playedBeat(chart.startBeat + h.beat, bpm) * spb;
           if (t < now - 0.005 || t >= until - 0.005) continue;
           play(t, h.notes, Math.min(h.beats * spb, until - t));
         }

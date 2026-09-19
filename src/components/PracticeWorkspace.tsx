@@ -251,8 +251,11 @@ export default function PracticeWorkspace({ exercise }: { exercise: Exercise }) 
           ? timed.index
           : mode === "improv"
             ? listen.activeIndex
-            : ear.index;
+            : ear.stepIndex;
   const currentStep = lesson.steps[activeIndex] ?? null;
+
+  // In an ear drill the strip counts prompts. It must not name them.
+  const earStrip = useMemo(() => lesson.steps.map((s) => ({ ...s, label: undefined })), [lesson.steps]);
 
   const held = mode === "practice" ? practice.held : mode === "timed" ? timed.held : mode === "improv" ? improv.held : mode === "ear" ? ear.held : freeHeld;
 
@@ -562,7 +565,7 @@ export default function PracticeWorkspace({ exercise }: { exercise: Exercise }) 
       {mode === "improv" ? (
         <ImprovMeter session={improv} target={exercise.mastery.accuracy} />
       ) : (
-        <StepStrip steps={lesson.steps} activeIndex={activeIndex} completed={mode === "practice" ? practice.results.length : mode === "timed" ? timed.results.length : mode === "ear" ? ear.results.length : 0} />
+        <StepStrip steps={mode === "ear" ? earStrip : lesson.steps} activeIndex={mode === "ear" ? ear.index : activeIndex} completed={mode === "practice" ? practice.results.length : mode === "timed" ? timed.results.length : mode === "ear" ? ear.results.length : 0} />
       )}
 
       {showsChart && <SheetMusic lesson={lesson} activeIndex={activeIndex} onBar={mode === "listen" ? onBar : undefined} />}

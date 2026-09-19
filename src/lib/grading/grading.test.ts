@@ -1,5 +1,6 @@
 import { describe, expect, it } from "vitest";
 import { findExercise } from "@/lib/curriculum/tree";
+import { shuffledOrder } from "./ear";
 import { classify, scoreImprov } from "./improv";
 import { freshNotes, onTimeWindow, stepAt, summarise, timedSteps } from "./timed";
 
@@ -40,6 +41,21 @@ describe("timed", () => {
       { index: 2, hit: false, onTime: false, wrongNotes: 0 },
     ]);
     expect(s.lean).toBeCloseTo(-0.15);
+  });
+});
+
+describe("ear", () => {
+  it("asks every prompt once, and keeps a cadence together and in order", () => {
+    const steps = findExercise("ear-cadence")!.generate("C").steps;
+    let seed = 7;
+    const random = () => (seed = (seed * 16807) % 2147483647) / 2147483647;
+    const order = shuffledOrder(steps, random);
+    expect([...order].sort((a, b) => a - b)).toEqual(steps.map((_, i) => i));
+    order.forEach((k, pos) => {
+      if (pos > 0 && steps[k].label === steps[order[pos - 1]].label) expect(k).toBe(order[pos - 1] + 1);
+    });
+    const quality = findExercise("ear-quality")!.generate("C").steps;
+    expect(shuffledOrder(quality, random)).not.toEqual(quality.map((_, i) => i));
   });
 });
 

@@ -26,6 +26,17 @@ export const TEACHING: Record<string, string[]> = {
     "The flat 7th, ten half steps, is restless and bluesy: the sound of a dominant chord. The major 7th, eleven, sits a half step under the octave and sounds bright and suspended.",
     "Play each interval, then sing the top note. What you can sing you will start to hear on records.",
   ],
+  "ear-intervals": [
+    "The lower note is always the tonic. Only the upper note is in question, and there are five answers: minor 3rd, major 3rd, 5th, flat 7th, major 7th.",
+    "Sing the top note before you look for it. If you can sing it, your ear already knows it and your hand only has to find it.",
+    "Learn each one by its feel. The 5th is hollow. The 3rds are sweet, major bright and minor dark. The flat 7th leans. The major 7th glows and nearly hurts.",
+    "The order changes every time, so there is nothing to memorise. Ears are trained a few minutes a day, every day, from the first week.",
+  ],
+  "ear-triads": [
+    "Two questions each time. Where is the bottom note: the 1st, 4th or 5th of the key? Then is the chord major or minor?",
+    "Sing the lowest note and find it on the keys first. A chord is much easier to name once its root is under your finger.",
+    "Then listen to the middle note only. Major and minor differ by that one half step, and everything else in the chord is the same.",
+  ],
   triads: [
     "A triad is root, 3rd and 5th, each a third apart. Fingers 1, 3 and 5.",
     "Major to minor moves one note: the 3rd drops a half step. The root and 5th stay put.",
@@ -52,12 +63,24 @@ export const TEACHING: Record<string, string[]> = {
     "A m7b5 shell looks just like a m7 shell. The flat 5th that tells them apart is left to the bass or the right hand.",
     "Say the degrees as you play them: root, 3, 7. You are learning names for shapes, not just shapes.",
   ],
+  "ear-sevenths": [
+    "Four qualities on one root. Listen to the 3rd first: major or minor. That splits them into two pairs.",
+    "Then the 7th. With a major 3rd, a major 7th is maj7 and a flat 7th is dominant. With a minor 3rd, listen to the 5th: a flat 5th makes it half diminished.",
+    "The dominant is the restless one, because its 3rd and 7th are a tritone apart. Learn that sound above all the others. It is what makes harmony move.",
+    "Play back all four notes. Hearing a chord as a colour is a start. Hearing the notes inside it is the skill.",
+  ],
   "ii-v-i-shells": [
     "The ii sets up, the V builds tension, the I resolves it. Most standards are made of this cadence, in one key after another.",
     "The smoothest path alternates shapes: the ii as root-7, the V as root-3, the I as root-7, or the other way round. The 7th of the ii falls a half step to the 3rd of the V, and that note then stays put and becomes the 7th of the I. The top of your hand barely moves while the root walks.",
     "Listen to the bass. It walks a note a beat and lands on the root at the top of each bar, and your chord lands with it.",
     "Say the numerals as you play. Across twelve keys the letter names change, but ii, V and I do not.",
     "The I lasts two bars. That is where a soloist finishes a phrase, so let the chord sit still.",
+  ],
+  "arpeggios-ii-v-i": [
+    "Root, 3rd, 5th, 7th, a note a beat, over each chord of the cadence. On the I, which lasts two bars, the arpeggio comes back down.",
+    "Chord tones are where a jazz line lands. Learn them before any scale, because a scale with no targets in it is only a run.",
+    "Say the degree of every note as you play it. In a solo you will need to find the 3rd of a chord without thinking, and this is where that starts.",
+    "The 7th at the top of the ii is a half step above the 3rd of the V. Hear that pull even though the arpeggio starts again from the root.",
   ],
   "the-vamp": [
     "The left hand is the ii-V-I as full shells, root, 3rd and 7th. Each spans a seventh, inside an octave, and it never changes. The two-note shells you have just learned are these with one note left out.",
@@ -120,8 +143,15 @@ export const TEACHING: Record<string, string[]> = {
     "The bass has the root, so your left hand drops it and plays a colour note instead: the 9th. That is a rootless voicing.",
     "Form A is 3-5-7-9 from the bottom up. Form B is 7-9-3-5: the same four notes with the lower pair moved up an octave.",
     "On a dominant the 5th becomes the 13th: 3-13-7-9 and 7-9-3-13. That 13th is much of what makes a dominant sound like jazz.",
+    "The half-diminished chord is the exception. It has no usable 9th, so its forms take the root in that place: 3-5-7-root and 7-root-3-5.",
     "Keep the lowest note no lower than about the D below middle C. Any lower and the 3rd turns to mud.",
     "Alone, a rootless voicing can sound unfinished. Play the root with the right hand now and then to hear the chord it implies.",
+  ],
+  "arpeggios-3-to-9": [
+    "The same four notes your left hand is holding, 3, 5, 7, 9, played one at a time an octave up. A voicing is an arpeggio you have not broken yet.",
+    "Starting on the 3rd and ending on the 9th is the most used arpeggio in bebop. It says the chord's quality at once and finishes on its colour.",
+    "On a dominant the left hand swaps the 5th for the 13th. The line keeps the plain 5th, so the two hands differ by that one note.",
+    "Once it is easy, start each arpeggio a beat late, or play only three of its four notes. You are already improvising.",
   ],
   "ii-v-i-rootless": [
     "Start the ii in one form and the V in the other. From ii to V only one note moves: the 7th of the ii falls a half step to become the 3rd of the V.",
@@ -134,6 +164,12 @@ export const TEACHING: Record<string, string[]> = {
     "The Charleston rhythm: one hit on beat one and one on the and of two. It is the oldest comping rhythm there is and still the most useful.",
     "The chord changes every two beats now, so find the next shape while the current one rings, not after.",
     "The vi shares three notes with the I. Hear it as a darker shade of home.",
+  ],
+  "improv-turnaround": [
+    "Four chords, two beats each. Start with one note per chord, always a 3rd. Four notes, and the whole turnaround can be heard in them.",
+    "Then two notes per chord: the 3rd and one other chord tone. Leave scales out for now. Chord tones alone make complete, musical lines.",
+    "The I and the vi share three notes. When the changes go by this fast, think of two sounds, home and away, not of four chords.",
+    "Rest for a whole bar now and then. A solo over a loop needs air more than it needs notes.",
   ],
   "bb-blues": [
     "The same twelve bars, now comped with rootless voicings. It is written in Bb because that is the blues key horn players call most.",
@@ -166,6 +202,12 @@ export const TEACHING: Record<string, string[]> = {
     "In bars ten to twelve the I turns into I7 and falls to the IV, then a diminished chord a half step above the IV lifts the harmony back to the I. Bar six of the jazz blues makes the same move.",
     "In bars three and fifteen the II7 and V7 share a bar, two beats each. Know both shapes before you arrive.",
   ],
+  "improv-ja-da": [
+    "The VI7, II7 and V7 each have a 3rd from outside the key. Land on it as the chord arrives and the listener hears the change without the band.",
+    "From the 3rd of one dominant, fall a half step to the 7th of the next, then on to its 3rd a half step lower. One line of half steps runs through the whole cycle.",
+    "Over the I, relax. Any note of the key works there. The work is in the bars with dominants in them.",
+    "In bar ten, mark the I7 with its flat 7th. It is one note, and it tells everyone the IV is coming.",
+  ],
   "indiana-changes": [
     "Thirty-two bars in four groups of eight. The first and third open the same way: I, then VI7, then two bars of II7.",
     "The first eight is dominants resolving down a fifth, VI7 to II7 to V7 to I, and its last bar is a ii-V aimed at the IV.",
@@ -183,6 +225,12 @@ export const TEACHING: Record<string, string[]> = {
     "In a rootless half-diminished voicing the 9th is replaced by the root, because a flat 9 would grind and a natural 9 is outside the key. The shape is the same as a m6 chord a minor third up.",
     "Practise it straight after the major ii-V-I in the same key. The two differ by a handful of notes, and the ear learns them fastest side by side.",
   ],
+  "scale-melodic-minor": [
+    "A major scale with its 3rd lowered a half step, and nothing else changed. In jazz it is played the same going up and coming down.",
+    "It is the scale of a minor tonic. Its major 6th is the 6th of your m6 chord, and its major 7th is the leading note that the minor V7 borrows.",
+    "Compare it with dorian: one note differs, the 7th. Dorian's flat 7th belongs to a ii chord on its way somewhere. The major 7th belongs to a minor chord that is home.",
+    "The melodic minor scale a half step above the root of a dominant is that dominant's altered scale. You do not need that yet. Know only that this scale will come back.",
+  ],
   "altered-dominants": [
     "The same rootless dominant three ways: plain, with a flat 9, with a flat 13. The 3rd and 7th never change. Only the notes above them do.",
     "Plain to b9 moves two notes, the 9th and the 13th, each down a half step. b9 to b13 puts the 9th back. Find which fingers move.",
@@ -194,6 +242,12 @@ export const TEACHING: Record<string, string[]> = {
     "The bVI7 to V7 in bars nine and ten is a tritone substitute sliding down a half step. It is the signature sound of the minor blues.",
     "From i to iv the flat 3rd of the i stays put and becomes the flat 7th of the iv. The other guide tone falls a whole step.",
     "The V is a 7b9. Its flat 9 is the flat 6th of the minor key and wants to fall a half step to the 5th.",
+  ],
+  "improv-minor-blues": [
+    "The tonic's blues scale works over all twelve bars, as it did in the major blues. Start there, and play riffs, not runs.",
+    "In bars nine and ten, step outside it. The flat VI7 and the V7 are a half step apart, so one short idea played twice, a half step lower the second time, fits both.",
+    "The 3rd of the V7 is the leading note, a half step under the tonic. It is not in the blues scale, and it is the strongest note you can play in bar ten.",
+    "Over the iv in bars five and six, lean on its 3rd, the flat 6th of the key. It is the one note that says the chord has changed.",
   ],
   "drop2-forms": [
     "Take a four-note chord in close position and drop the second voice from the top down an octave. That is drop 2.",
@@ -214,6 +268,12 @@ export const TEACHING: Record<string, string[]> = {
     "Each ii-V is played twice. The second time is your chance to fix the first.",
     "The bridge is a ii-V-I into the IV, then a ii-V that lands on the V of the home key and waits there for two bars.",
   ],
+  "improv-satin-doll": [
+    "Each ii-V is played twice. Play an idea the first time and answer it the second.",
+    "Bars three and four are bars one and two a whole step higher. Move your idea up with them. A sequence in the chords asks for a sequence in the line.",
+    "Bar six is a ii-V a half step above home. Everything you played over the home ii-V fits it a half step up, and then it slides back down.",
+    "The bridge starts with four bars aimed at one key, the IV. After all that motion, slow down: fewer notes, longer ones.",
+  ],
   "autumn-changes": [
     "Two keys a minor third apart: the minor home and its relative major. The tune moves between a major ii-V-I into the relative major and a minor ii-V-i into home.",
     "Bars one to four are a ii-V-I in the relative major, then its IV. Bars five to eight are the minor ii-V-i. The whole tune is those two cadences, rearranged.",
@@ -228,12 +288,14 @@ export const TEACHING: Record<string, string[]> = {
     "Compared with the natural minor scale it has a raised 6th. That major 6th is its bright colour.",
     "The chord tones are root, flat 3rd, 5th and flat 7th. Treat them as landing points and the rest as steps between them.",
     "Sing the 6th when you reach it. It is the note that sets dorian apart from other minor sounds.",
+    "It is written in swung eighths, the way you will use it: up a bar to the octave, down a bar to the root. Long, short, long, short, with the short note on the last third of the beat.",
   ],
   "scale-mixolydian": [
     "Mixolydian is the major scale started on its fifth note: a major scale with a flat 7th. It fits a dominant seventh.",
     "Handle the 4th with care over a dominant. It rubs against the 3rd, so pass through it rather than landing on it.",
     "Dorian over the ii and mixolydian over the V are the same seven notes. Over a ii-V you change which notes you aim at, not the scale.",
     "Put the 3rd and flat 7th on the beats. They are what tell the listener the chord is a dominant.",
+    "Going up in eighths from the root, the beats fall on the root, 3rd, 5th and flat 7th. Start a descending run on the root instead and every chord tone falls between the beats. The next drill fixes that with one extra note.",
   ],
   "scale-blues": [
     "Root, flat 3rd, 4th, flat 5th, 5th, flat 7th. Six notes that sit over every chord of a blues.",
@@ -243,8 +305,8 @@ export const TEACHING: Record<string, string[]> = {
   ],
   "scale-bebop": [
     "Mixolydian with one extra passing note, the natural 7th, between the flat 7th and the root. Eight notes instead of seven.",
-    "Start on the root on a beat and run down in eighths, and the chord tones stay on the beats all the way. That is why bebop lines sound grounded at speed.",
-    "Practise it descending first. Bebop lines mostly run downwards from a chord tone.",
+    "Start on the root on a beat and run in eighths, and the chord tones stay on the beats all the way, down and up. Eight notes fill a bar exactly, so the root comes round on the next downbeat. That is why bebop lines sound grounded at speed.",
+    "The drill descends first. Bebop lines mostly run downwards from a chord tone.",
     "The added note only passes. Never hold the natural 7th against a dominant chord.",
   ],
   "guide-tones": [
