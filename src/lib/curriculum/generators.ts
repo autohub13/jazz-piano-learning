@@ -7,7 +7,7 @@ import { arrange, closeUnder, guideToneMelody, numeralFor, ticks, type Variation
 import { bassLine, guitarComp, type BassChord } from "@/lib/arrange/bass";
 import { arrangeTune, chartFromTune, levelVariation } from "@/lib/arrange/tune";
 import { KEYS, type KeyName } from "@/lib/lessons/transpose";
-import type { BandChart, Finger, HarmonyRegion, Lesson, LessonStep } from "@/lib/lessons/types";
+import type { BandChart, Finger, Hand, HarmonyRegion, Lesson, LessonStep } from "@/lib/lessons/types";
 import { parseChord, rootOnDegree, type Quality } from "@/lib/music/chords";
 import { degreeName } from "@/lib/music/harmony";
 import { isBlackKey, pitchClass, pitchClassName, type Midi, type Spelling } from "@/lib/music/notes";
@@ -149,12 +149,14 @@ export function chordDrill(qualities: readonly DegreeChord["quality"][], style: 
         notes,
         beats: 4,
         label: forms.length > 1 ? `${symbol}, form ${String.fromCharCode(65 + i)}` : symbol,
-        hand: "left",
+        // Drop 2 spans a tenth: the left hand takes the dropped voice.
+        ...(style === "drop2" ? { hands: notes.map((_, j): Hand => (j === 0 ? "left" : "right")) } : { hand: "left" as const }),
       });
     });
   }
   const styleName: Record<VoicingStyle, string> = {
     shell: "shells",
+    shell3: "full shells",
     rootless: "rootless voicings",
     drop2: "drop 2 voicings",
     quartal: "quartal voicings",
@@ -385,7 +387,7 @@ export function earLesson(kind: EarKind, key: KeyName): Lesson {
     for (let i = 0; i < order.length; i++) {
       const q = order[(start + i) % order.length];
       const symbol = `${rootName}${q}`;
-      const forms = voicingForms(parseChord(symbol), i % 2 === 0 ? "shell" : "rootless", 57);
+      const forms = voicingForms(parseChord(symbol), i % 2 === 0 ? "shell3" : "rootless", 57);
       steps.push({ notes: forms[i % forms.length], beats: 4, label: symbol, hand: "left" });
     }
   } else {

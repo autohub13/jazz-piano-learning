@@ -107,6 +107,9 @@ export interface Lesson {
   /** Bass and drums behind Listen mode. Only the pieces have one; a drill
    *  like the C major scale would fight a walking bass, not sit on it. */
   band?: BandChart;
+  /** Pitch class of the tonic when the form is a blues. A solo may then use
+   *  the tonic's blues scale over every chord, which is what the blues is. */
+  bluesTonicPc?: number;
   /** Chord by chord analysis, shown as the piece plays. */
   harmony?: HarmonyRegion[];
   steps: LessonStep[];

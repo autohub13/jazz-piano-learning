@@ -1,7 +1,7 @@
 import { describe, expect, it } from "vitest";
 import { findExercise } from "@/lib/curriculum/tree";
 import { classify, scoreImprov } from "./improv";
-import { freshNotes, stepAt, summarise, timedSteps } from "./timed";
+import { freshNotes, onTimeWindow, stepAt, summarise, timedSteps } from "./timed";
 
 describe("timed", () => {
   it("finds the step at a time, allowing an early strike", () => {
@@ -11,12 +11,12 @@ describe("timed", () => {
       { notes: [64], beats: 2 },
     ];
     const timed = timedSteps(steps, 120); // 0.5 s a beat
-    expect(stepAt(timed, -0.5)).toBe(-1);
-    expect(stepAt(timed, 0)).toBe(0);
-    expect(stepAt(timed, 0.45)).toBe(1); // just early for step 1
-    expect(stepAt(timed, 0.85)).toBe(1);
-    expect(stepAt(timed, 1.0)).toBe(2);
-    expect(stepAt(timed, 2.5)).toBe(3);
+    expect(stepAt(timed, -0.5, 0.12)).toBe(-1);
+    expect(stepAt(timed, 0, 0.12)).toBe(0);
+    expect(stepAt(timed, 0.45, 0.12)).toBe(1); // just early for step 1
+    expect(stepAt(timed, 0.85, 0.12)).toBe(1);
+    expect(stepAt(timed, 1.0, 0.12)).toBe(2);
+    expect(stepAt(timed, 2.5, 0.12)).toBe(3);
   });
 
   it("only asks for fresh notes and summarises hits", () => {
@@ -29,6 +29,17 @@ describe("timed", () => {
     ]);
     expect(s.accuracy).toBe(0.5);
     expect(s.timing).toBe(0.5);
+  });
+
+  it("narrows the window at speed and says which way the time leans", () => {
+    expect(onTimeWindow(60)).toBe(0.12);
+    expect(onTimeWindow(240)).toBeCloseTo(0.0625);
+    const s = summarise([
+      { index: 0, hit: true, onTime: false, offset: -0.2, wrongNotes: 0 },
+      { index: 1, hit: true, onTime: true, offset: -0.1, wrongNotes: 0 },
+      { index: 2, hit: false, onTime: false, wrongNotes: 0 },
+    ]);
+    expect(s.lean).toBeCloseTo(-0.15);
   });
 });
 
@@ -55,5 +66,28 @@ describe("improv", () => {
     expect(s.inScale).toBe(1);
     expect(s.score).toBeGreaterThan(0.8);
     expect(scoreImprov([]).score).toBe(0);
+  });
+
+  it("takes the blues scale over every chord of a blues", () => {
+    const blues = findExercise("improv-f-blues")!.generate("F");
+    // Bar one is F7: Ab and B are the blue notes, F# is nobody's.
+    expect(classify(blues, 0.01, bpm, 68)?.klass).toBe("scale");
+    expect(classify(blues, 0.01, bpm, 71)?.klass).toBe("scale");
+    expect(classify(blues, 0.01, bpm, 66)?.klass).toBe("outside");
+    // Not on a tune that is not a blues.
+    expect(classify(lesson, 4.01, bpm, 63)?.klass).toBe("outside");
+    // One pass up the blues scale and back, a note a beat, clears the bar.
+    const scale = [65, 68, 70, 71, 72, 75, 77, 75, 72, 71, 70, 68];
+    const line = Array.from({ length: 48 }, (_, i) => classify(blues, i * 0.5 + 0.01, bpm, scale[i % 12])!);
+    expect(scoreImprov(line).inScale).toBe(1);
+  });
+
+  it("hears a half step into a chord tone as an approach, not a wrong note", () => {
+    // Over Dm7: G# leads up into A, the 5th. Alone it is outside.
+    const approach = [classify(lesson, 0.26, bpm, 68)!, classify(lesson, 0.51, bpm, 69)!];
+    expect(approach[0].klass).toBe("outside");
+    expect(scoreImprov(approach).inScale).toBe(1);
+    const stranded = [classify(lesson, 0.26, bpm, 68)!, classify(lesson, 0.51, bpm, 72)!];
+    expect(scoreImprov(stranded).inScale).toBe(0.5);
   });
 });

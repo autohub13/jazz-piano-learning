@@ -1,5 +1,5 @@
 // The repertoire. Melodies are traditional or original; the chord charts of
-// standards are not copyrightable and are given under generic names. Adding a
+// standards are not copyrightable, and are given without their melodies. Adding a
 // tune is adding an entry here, and every key and level of it is generated.
 
 import type { Tune } from "./types";
@@ -82,10 +82,10 @@ export const tunes: Tune[] = [
     style: "swing",
     bpm: { min: 90, default: 140, max: 200 },
     level: 3,
-    blurb: "Sixteen bars that cycle through A7, D7 and G7 back home. The first cycle of dominants.",
+    blurb: "Sixteen bars that cycle through A7, D7 and G7 back home, with a trip to the IV in the middle. Sonny Rollins wrote Doxy over these changes.",
     form: `
-      | C6 | % | C6 | Dm7 G7 | C6 | A7 | D7 | G7 |
-      | C6 | % | C6 | Dm7 G7 | C6 | A7 | D7 G7 | C6 |
+      | C6 | A7 | D7 G7 | C6 | C6 | A7 | D7 | G7 |
+      | C6 | C7 | F6 | F#dim7 | C6 | A7 | D7 G7 | C6 |
     `,
   },
   {
@@ -99,10 +99,10 @@ export const tunes: Tune[] = [
     level: 3,
     blurb: "Thirty-two bars of a 1917 tune that became a bebop vehicle: Donna Lee is written over these changes. Dominants everywhere.",
     form: `
-      | F6 | % | Bb7 | % | F6 | D7 | G7 | % |
-      | C7 | % | F6 | % | Am7 | D7 | Gm7 | C7 |
-      | F6 | % | Bb7 | % | F6 | D7 | G7 | % |
-      | Am7 | D7 | Gm7 | C7 | F6 | Bb7 | F6 | C7 |
+      | F6 | D7 | G7 | % | C7 | % | F6 | Cm7 F7 |
+      | Bbmaj7 | Bbm6 | F6 | D7 | G7 | % | Gm7 | C7 |
+      | F6 | D7 | G7 | % | A7 | % | Dm7 | A7 |
+      | Dm7 | A7 | Dm7 | Abdim7 | Am7 D7 | Gm7 C7 | F6 | Gm7 C7 |
     `,
   },
   {
@@ -218,6 +218,37 @@ export const tunes: Tune[] = [
       | F7 | Bb7 | F7 | Cm7 F7 |
       | Bb7 | Bdim7 | F7 | Am7 D7 |
       | Gm7 | C7 | F7 D7 | Gm7 C7 |
+    `,
+  },
+  {
+    slug: "blue-bossa",
+    title: "Blue Bossa",
+    composer: "Kenny Dorham",
+    year: 1963,
+    key: "C",
+    minor: true,
+    style: "swing",
+    bpm: { min: 80, default: 132, max: 200 },
+    level: 5,
+    blurb: "Sixteen bars: the minor home, its iv, a minor ii-V, and a major ii-V-I a half step up. Played here as medium swing.",
+    form: `
+      | Cm7 | % | Fm7 | % | Dm7b5 | G7b9 | Cm7 | % |
+      | Ebm7 | Ab7 | Dbmaj7 | % | Dm7b5 | G7b9 | Cm7 | Dm7b5 G7b9 |
+    `,
+  },
+  {
+    slug: "tune-up",
+    title: "Tune Up",
+    composer: "Miles Davis",
+    year: 1953,
+    key: "D",
+    style: "swing",
+    bpm: { min: 90, default: 150, max: 240 },
+    level: 5,
+    blurb: "ii-V-I in D, then in C, then in Bb. The standard workout for moving one idea through three keys.",
+    form: `
+      | Em7 | A7 | Dmaj7 | % | Dm7 | G7 | Cmaj7 | % |
+      | Cm7 | F7 | Bbmaj7 | Ebmaj7 | Em7 | F7 | Bbmaj7 | Em7 A7 |
     `,
   },
   {

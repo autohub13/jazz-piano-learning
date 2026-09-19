@@ -20,7 +20,7 @@ import type { Hand, HarmonyRegion, Lesson } from "./types";
 export type { Variation, VoicingChoice, MelodyChoice, RhythmChoice, TextureChoice };
 
 export const CHOICES: { [K in keyof Variation]: readonly Variation[K][] } = {
-  voicing: ["written", "shell", "rootless", "drop2", "quartal"],
+  voicing: ["written", "shell", "shell3", "rootless", "drop2", "quartal"],
   reharm: ["written", "tritone", "secondary", "passingDim"] satisfies readonly Reharm[],
   melody: ["written", "arpeggio", "enclosure", "scaleRun"],
   rhythm: ["written", "held", "charleston", "anticipate", "fill"],

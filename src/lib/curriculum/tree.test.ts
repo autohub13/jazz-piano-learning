@@ -47,6 +47,19 @@ describe("skill tree", () => {
     }
   });
 
+  it("never asks either hand for more than an octave", () => {
+    for (const e of exercises) {
+      for (const key of e.keys === "all" ? KEYS : e.keys) {
+        for (const step of e.generate(key).steps) {
+          for (const hand of ["left", "right"] as const) {
+            const notes = step.notes.filter((_, j) => (step.hands?.[j] ?? step.hand ?? "right") === hand);
+            if (notes.length) expect(Math.max(...notes) - Math.min(...notes), `${e.id} ${key}`).toBeLessThanOrEqual(12);
+          }
+        }
+      }
+    }
+  });
+
   for (const e of exercises) {
     it(`${e.id} generates in every key`, () => {
       const keys = e.keys === "all" ? KEYS : e.keys;

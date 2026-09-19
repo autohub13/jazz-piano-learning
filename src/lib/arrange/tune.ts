@@ -183,6 +183,7 @@ export function arrangeTune(tune: Tune, key: KeyName, v: Variation = levelVariat
     bpmRange: [tune.bpm.min, tune.bpm.max],
     range: chart.range,
     keyboardBase: Math.max(36, chart.range.low),
+    bluesTonicPc: tune.style === "blues" ? KEYS.indexOf(key) : undefined,
     band,
     harmony,
     steps,

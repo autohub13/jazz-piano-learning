@@ -44,21 +44,23 @@ export const TEACHING: Record<string, string[]> = {
   // Level 2
 
   shells: [
-    "A shell is the root plus the 3rd and 7th. The root says which chord, the 3rd says major or minor, the 7th says maj7 or dominant. The 5th adds nothing, so it goes.",
-    "Two shapes: root-3-7 and root-7-3. In a progression you pick whichever keeps the hand closest to the last chord, and that choice is the whole skill.",
-    "Keep shells low. Three notes stay clear down there, where four would turn to mud.",
+    "A shell is the root with one guide tone above it: the 7th or the 3rd. The 3rd says major or minor, the 7th says maj7 or dominant, and the 5th adds nothing, so it goes.",
+    "Two shapes: root-7 and root-3. Two notes fit any hand, which is why Bud Powell could play them at any tempo. In a progression you pick whichever keeps the top note closest to the last one, and that choice is the whole skill.",
+    "The guide tone you leave out is rarely missed. The tune or the band usually has it, and the ear fills in the rest.",
+    "A hand that reaches a tenth can hold all three notes, root-3-7 or root-7-3. The voicing menu has them as full shells. They are an extra, not a requirement.",
+    "Keep the root-3 shape at the C below middle C or higher. Any lower and the 3rd turns to mud. Root-7 can go lower.",
     "A m7b5 shell looks just like a m7 shell. The flat 5th that tells them apart is left to the bass or the right hand.",
     "Say the degrees as you play them: root, 3, 7. You are learning names for shapes, not just shapes.",
   ],
   "ii-v-i-shells": [
     "The ii sets up, the V builds tension, the I resolves it. Most standards are made of this cadence, in one key after another.",
-    "The smoothest path alternates shapes: ii as root-3-7, V as root-7-3, I as root-3-7. Then the 7th of each chord falls a half step to the 3rd of the next, and the other guide tone does not move at all.",
+    "The smoothest path alternates shapes: the ii as root-7, the V as root-3, the I as root-7, or the other way round. The 7th of the ii falls a half step to the 3rd of the V, and that note then stays put and becomes the 7th of the I. The top of your hand barely moves while the root walks.",
     "Listen to the bass. It walks a note a beat and lands on the root at the top of each bar, and your chord lands with it.",
     "Say the numerals as you play. Across twelve keys the letter names change, but ii, V and I do not.",
     "The I lasts two bars. That is where a soloist finishes a phrase, so let the chord sit still.",
   ],
   "the-vamp": [
-    "The left hand is the ii-V-I in shells you have just learned. It never changes.",
+    "The left hand is the ii-V-I as full shells, root, 3rd and 7th. Each spans a seventh, inside an octave, and it never changes. The two-note shells you have just learned are these with one note left out.",
     "The right hand plays one note at a time, every one a chord tone or the 9th, moving mostly by step.",
     "Two hits a bar: one on the beat, one on the and of two, a swung eighth late, and let it ring. That late second hit is where the swing comes from.",
     "Over the I the tune touches the 9th. The 9th is what makes the resolution sound like jazz rather than a hymn.",
@@ -68,7 +70,7 @@ export const TEACHING: Record<string, string[]> = {
     "Twelve bars in three lines of four. I7 with a IV7 in bar two, then IV7 for two bars, I7 for two, and V7, IV7, I7, V7 to go round again.",
     "Every chord is a dominant seventh, the I included. In the blues the flat 7th is not tension waiting to resolve. It is home.",
     "The riff slides from the 3rd down to the flat 3rd, the blue note, and lands on the root. Over the IV it is the same shape a fourth higher.",
-    "From I7 to IV7 in shells, the 3rd falls a half step to become the 7th and the 7th falls a half step to become the 3rd. Two fingers slide and the chord has changed.",
+    "From I7 to IV7 the guide tones trade places: the 7th of the I7 falls a half step to the 3rd of the IV7, and the 3rd of the I7 falls a half step to its 7th. Your shell holds one of the pair. Follow it down a half step and back.",
     "Count bars out loud the first few times. Losing the form is the commonest blues mistake, and the band will not wait.",
   ],
   "when-the-saints": [
@@ -158,15 +160,17 @@ export const TEACHING: Record<string, string[]> = {
     "In the last line the IV turns minor: the iv with a major 6th. Its flat 3rd is the flat 6th of the key, and it falls a half step on the way home.",
   ],
   "ja-da-changes": [
-    "Sixteen bars in two halves. Each sits on the I, then walks VI7, II7, V7 back home.",
+    "Sixteen bars in two halves. Each opens on the I and goes straight to the VI7, then II7 and V7 back home.",
     "The VI7 and II7 are not in the key. Each is the V of the chord after it, so the harmony keeps falling by fifths.",
     "The 3rd of each dominant becomes the 7th of the next, a half step lower. Follow that single line through your left hand.",
-    "Near the end the II7 and V7 share a bar, two beats each. Know both shapes before you arrive.",
+    "In bars ten to twelve the I turns into I7 and falls to the IV, then a diminished chord a half step above the IV lifts the harmony back to the I. Bar six of the jazz blues makes the same move.",
+    "In bars three and fifteen the II7 and V7 share a bar, two beats each. Know both shapes before you arrive.",
   ],
   "indiana-changes": [
-    "Thirty-two bars in four groups of eight. The first and third are the same, so learn one and you have half the tune.",
-    "Almost every chord is a dominant resolving down a fifth: VI7 to II7 to V7 to I.",
-    "Bars thirteen to sixteen put a minor ii in front of two of those dominants: iii-VI7-ii-V7. Hear how the minor chord softens the approach.",
+    "Thirty-two bars in four groups of eight. The first and third open the same way: I, then VI7, then two bars of II7.",
+    "The first eight is dominants resolving down a fifth, VI7 to II7 to V7 to I, and its last bar is a ii-V aimed at the IV.",
+    "Bars nine and ten are the IV and then the minor iv. Its flat 3rd is the flat 6th of the key, and it falls a half step on the way back to the I.",
+    "The third eight swerves: III7 for two bars, into the relative minor. In the last eight a diminished chord a half step under the iii pushes up into iii-VI7-ii-V7, and home.",
     "Comp with the Charleston and let the bass carry the harmony. You do not have to play every change on beat one.",
   ],
 
@@ -176,7 +180,7 @@ export const TEACHING: Record<string, string[]> = {
     "The minor cadence: half-diminished ii, dominant with a flat 9, minor tonic.",
     "The ii is half diminished because its 5th is the flat 6th of the minor key. The V takes a flat 9 for the same reason: it is the same note.",
     "The tonic here is m6. The major 6th keeps a minor chord settled without sounding heavy.",
-    "In a rootless half-diminished voicing the 9th is replaced by the 11th, because a flat 9 would grind against the root in the bass.",
+    "In a rootless half-diminished voicing the 9th is replaced by the root, because a flat 9 would grind and a natural 9 is outside the key. The shape is the same as a m6 chord a minor third up.",
     "Practise it straight after the major ii-V-I in the same key. The two differ by a handful of notes, and the ear learns them fastest side by side.",
   ],
   "altered-dominants": [
@@ -194,7 +198,8 @@ export const TEACHING: Record<string, string[]> = {
   "drop2-forms": [
     "Take a four-note chord in close position and drop the second voice from the top down an octave. That is drop 2.",
     "Every chord has four drop 2 shapes, one per inversion, so each chord tone takes a turn in the top voice.",
-    "The spread sounds fuller than close position without getting muddy. Guitarists and big band arrangers live on these shapes.",
+    "The spread is a ninth or a tenth, more than one hand holds. The left hand takes the dropped voice and the right hand the three above it.",
+    "It sounds fuller than close position without getting muddy. Guitarists and big band arrangers live on these shapes.",
     "Watch which degree is on top. In a tune the top of the voicing is what the listener hears as melody.",
   ],
   "tritone-sub": [
@@ -213,7 +218,7 @@ export const TEACHING: Record<string, string[]> = {
     "Two keys a minor third apart: the minor home and its relative major. The tune moves between a major ii-V-I into the relative major and a minor ii-V-i into home.",
     "Bars one to four are a ii-V-I in the relative major, then its IV. Bars five to eight are the minor ii-V-i. The whole tune is those two cadences, rearranged.",
     "The numerals are counted from the minor tonic, so the major cadence reads iv, bVII7, bIII. Read the chord panel for which key each bar is in.",
-    "Drop 2 voicings with anticipations: every change lands on the and of four of the bar before.",
+    "Drop 2 voicings in two hands, with anticipations: every change lands on the and of four of the bar before.",
   ],
 
   // Level 5
@@ -291,6 +296,18 @@ export const TEACHING: Record<string, string[]> = {
     "Play one chorus of nothing but 3rds and 7ths before you add anything else.",
     "Thirty-two bars is a long form. Plan phrases in four-bar blocks, one cadence each.",
   ],
+  "improv-blue-bossa": [
+    "Sixteen bars in three places: the minor home for eight, a major key a half step above it for four, and home again.",
+    "Over the i, play dorian. When the iv arrives one note changes: the 6th of the key drops a half step and becomes the iv's 3rd. The V7b9 then asks for its own 3rd, the leading tone.",
+    "Bars nine to twelve are a ii-V-I a half step up. Nothing carries over from the home key, so have the new scale under your hand a bar early.",
+    "Play the same short idea in bar one and in bar nine, moved up a half step. The listener hears the key change through you.",
+  ],
+  "improv-tune-up": [
+    "Three ii-V-Is, each a whole step below the last. Each I chord turns minor and becomes the next ii.",
+    "Make one four-bar phrase and play it three times, a whole step lower each time. It is a sequence, and sequences are what make a solo sound composed.",
+    "In bars thirteen and fourteen the ii of the home key goes to a dominant a half step above it, which falls a fifth into the bVI. Aim for the 3rd of that dominant.",
+    "Start every phrase on the 3rd of the ii until you can do it without thinking. Then start on the 7th.",
+  ],
   "ear-quality": [
     "Listen for the 3rd first: major or minor. Then the 7th: major, flat, or a 6th instead. That narrows it to one chord.",
     "maj7 is bright and still, m7 soft, 7 restless, m7b5 dark and unresolved, dim7 all tension, and the 6 chords sweet and settled.",
@@ -306,13 +323,14 @@ export const TEACHING: Record<string, string[]> = {
 
   "quartal-forms": [
     "Stack fourths instead of thirds and the chord stops sounding like a triad with extras. It sounds open and modern.",
-    "The m7 shape is the top four notes of the 'So What' voicing: fourths stacked from the 11th, with a major third on top.",
-    "On a dominant the shape starts with a tritone, 7th to 3rd, and stacks fourths above it. On maj7 all four notes are a fourth apart: 3, 13, 9, 5, with no root and no 7th.",
+    "The m7 shape is two fourths stacked from the 11th: 11, flat 7, flat 3. It is the middle of the 'So What' voicing, whose five notes take two hands.",
+    "On a dominant the shape is a tritone, 7th to 3rd, with a fourth on top: the 13th. On maj7 it is 3, 13, 9, all fourths, with no root and no 7th.",
+    "Three notes, not four. A fourth voice would stretch the hand past a ninth, and the left hand has to be able to move these quickly.",
     "Quartal voicings are ambiguous on purpose. The bass decides what they mean, so one shape can serve more than one chord.",
   ],
   "so-what": [
     "Two chords in thirty-two bars: the i for sixteen, a half step up for eight, back for eight. AABA, where B is the same thing moved up.",
-    "The voicing is fourths stacked from the 11th with a major third on top. Moving the whole shape up a half step is the entire bridge.",
+    "The voicing is two fourths stacked from the 11th. Moving the whole shape up a half step is the entire bridge.",
     "With one chord for sixteen bars, comping is all rhythm. Vary where the second hit of the Charleston falls, and leave whole bars empty.",
     "Count the form in eights. With no changes to mark the sections, the count is the only map you have.",
   ],
@@ -410,7 +428,7 @@ export const TEACHING: Record<string, string[]> = {
   "etude-colour": [
     "The V is replaced by the dominant a tritone away, so the bass walks ii, flat II, I by half steps.",
     "Over the substitute the tune holds its #11, which is the root of the V it replaced, and then its 3rd, which is that V's flat 7th. The two chords share their tritone, and the tune sits on it.",
-    "The left hand is drop 2 and arrives an eighth early. Let the anticipation ring over the bar line.",
+    "The voicing is drop 2 with the tune as its top voice. The right hand holds three notes and the left hand takes the dropped one, an octave down.",
     "The vibraphone has the first four bars and the horns answer in the next four. A snare fill marks each hand-over, so you can hear where you are in the form without counting.",
   ],
   "etude-lines": [

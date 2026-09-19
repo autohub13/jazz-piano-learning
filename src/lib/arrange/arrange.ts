@@ -288,6 +288,29 @@ function blockUnder(melody: NoteEvent[], chords: ChartChord[], chart: Chart): No
   });
 }
 
+/**
+ * Drop 2 under a tune. Each close chord the right hand holds under a melody
+ * note gives its second voice from the top to the left hand, an octave down.
+ * The tune stays on top, which is what drop 2 is for, and no hand is asked for
+ * a tenth.
+ */
+function dropSecond(blocks: NoteEvent[], chart: Chart): { right: NoteEvent[]; left: NoteEvent[]; full: NoteEvent[] } {
+  const right: NoteEvent[] = [];
+  const left: NoteEvent[] = [];
+  const full: NoteEvent[] = [];
+  for (const e of blocks) {
+    const dropped = e.notes.length === 4 ? e.notes[2] - 12 : null;
+    if (dropped === null || dropped < chart.range.low) {
+      right.push(e);
+      continue;
+    }
+    right.push({ ...e, notes: [e.notes[0], e.notes[1], e.notes[3]] });
+    left.push({ start: e.start, len: e.len, notes: [dropped] });
+    full.push({ start: e.start, len: e.len, notes: [dropped, e.notes[0], e.notes[1], e.notes[3]] });
+  }
+  return { right, left, full };
+}
+
 /** The chord's root in the bass octave, from about C2 up. */
 function bassNote(pc: number, chart: Chart): Midi {
   const floor = Math.max(36, chart.range.low);
@@ -386,9 +409,15 @@ export interface Arrangement {
 export function arrange(chart: Chart, v: Variation, comp: NoteEvent[] = []): Arrangement {
   const chords = reharmonise(chart.chords, v.reharm, TPB, chart.spelling);
   const shaped = shapeMelody(chart.melody, chords, v.melody, chart);
-  const melody = v.texture === "melodyTop" ? blockUnder(shaped, chords, chart) : shaped;
+  // Drop 2 is a ninth or a tenth wide, so it is a two-handed voicing. Under a
+  // tune it harmonises the tune; with no tune the hands share a comped chord.
+  // Stride has the left hand busy already, and falls back to shells.
+  const drop2 = v.voicing === "drop2" && v.texture === "written";
+  const harmonised = drop2 && shaped.length > 0;
+  let melody = v.texture === "melodyTop" || harmonised ? blockUnder(shaped, chords, chart) : shaped;
   const stride = v.texture === "stride" ? strideHits(chords, chart) : null;
-  const hits = stride ? stride.hits : v.texture === "solo" ? [] : compHits(comp, chords, v.rhythm, chart, melody);
+  const hits =
+    stride ? stride.hits : v.texture === "solo" || harmonised ? [] : compHits(comp, chords, v.rhythm, chart, melody);
   // What the left hand plays, and the chord shapes whose moves are described:
   // the left hand's chords, or with the melody on top, the right hand's.
   let left: NoteEvent[];
@@ -396,10 +425,21 @@ export function arrange(chart: Chart, v: Variation, comp: NoteEvent[] = []): Arr
   if (v.texture === "melodyTop") {
     left = hits.map((h) => ({ start: h.start, len: h.len, notes: [bassNote(parseChord(h.chord.symbol).rootPc, chart)] }));
     shapes = melody.filter((e) => e.notes.length > 1).map((e) => ({ chord: chordAt(chords, e.start), notes: e.notes }));
+  } else if (harmonised) {
+    const split = dropSecond(melody, chart);
+    melody = split.right;
+    left = split.left;
+    shapes = split.full.map((e) => ({ chord: chordAt(chords, e.start), notes: e.notes }));
   } else {
-    const voiced = voiceHits(hits, v.voicing, melody, chart);
-    left = stride ? [...stride.bass, ...voiced] : voiced;
+    const voiced = voiceHits(hits, v.voicing === "drop2" && !drop2 ? "shell" : v.voicing, melody, chart);
     shapes = hits.map((h, k) => ({ chord: h.chord, notes: voiced[k].notes }));
+    if (drop2) {
+      // No tune: the left hand takes the dropped voice, the right the rest.
+      left = voiced.map((e) => ({ ...e, notes: e.notes.slice(0, 1) }));
+      melody = voiced.filter((e) => e.notes.length > 1).map((e) => ({ ...e, notes: e.notes.slice(1) }));
+    } else {
+      left = stride ? [...stride.bass, ...voiced] : voiced;
+    }
   }
 
   // An anticipated chord starts its region on the push, so the analysis and

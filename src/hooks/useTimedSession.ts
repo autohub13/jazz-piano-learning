@@ -2,12 +2,12 @@
 
 // Timed practice. The listen player runs silent, so the band plays and the
 // clock moves, and the learner plays the piano part. Each step is scored when
-// the clock leaves it: hit or missed, and on time or late. The rAF loop here
+// the clock leaves it: hit or missed, and on time, early or late. The rAF loop here
 // only reads the clock; grading happens on note-down.
 
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import type { PianoEngine } from "@/lib/audio/pianoEngine";
-import { freshNotes, ON_TIME, stepAt, summarise, timedSteps, type TimedResult } from "@/lib/grading/timed";
+import { freshNotes, onTimeWindow, stepAt, summarise, timedSteps, type TimedResult } from "@/lib/grading/timed";
 import type { TimedStep } from "@/lib/lessons/timeline";
 import type { Lesson } from "@/lib/lessons/types";
 import type { Midi } from "@/lib/music/notes";
@@ -20,10 +20,12 @@ export interface TimedSession {
   held: ReadonlySet<Midi>;
   wrongNotes: ReadonlySet<Midi>;
   /** The last verdict, for the cue border. */
-  last: "hit" | "late" | "miss" | "wrong" | null;
+  last: "hit" | "early" | "late" | "miss" | "wrong" | null;
   results: TimedResult[];
   accuracy: number;
   timing: number;
+  /** Mean offset of the clean hits in seconds. Negative is rushing. */
+  lean: number;
   finished: boolean;
   noteDown(midi: Midi, velocity?: number): void;
   noteUp(midi: Midi): void;
@@ -48,6 +50,8 @@ export function useTimedSession(
   const timed = useMemo<TimedStep[]>(() => timedSteps(lesson.steps, bpm), [lesson.steps, bpm]);
   const timedRef = useRef(timed);
   timedRef.current = timed;
+  const windowRef = useRef(onTimeWindow(bpm));
+  windowRef.current = onTimeWindow(bpm);
   const stepsRef = useRef(lesson.steps);
   stepsRef.current = lesson.steps;
 
@@ -71,10 +75,13 @@ export function useTimedSession(
     const need = freshNotes(stepsRef.current[k]);
     const hit = need.every((n) => struckRef.current.has(n));
     const start = timedRef.current[k].startSec;
-    const onTime = hit && firstSecRef.current !== null && Math.abs(firstSecRef.current - start) <= ON_TIME;
-    const result: TimedResult = { index: k, hit, onTime, wrongNotes: wrongCountRef.current };
+    const offset = hit && firstSecRef.current !== null ? firstSecRef.current - start : undefined;
+    const onTime = offset !== undefined && Math.abs(offset) <= windowRef.current;
+    const result: TimedResult = { index: k, hit, onTime, offset, wrongNotes: wrongCountRef.current };
     setResults((prev) => [...prev, result]);
-    if (need.length > 0) setLast(!hit ? "miss" : wrongCountRef.current > 0 ? "wrong" : onTime ? "hit" : "late");
+    if (need.length > 0) {
+      setLast(!hit ? "miss" : wrongCountRef.current > 0 ? "wrong" : onTime ? "hit" : (offset ?? 0) < 0 ? "early" : "late");
+    }
   }, []);
 
   const openStep = useCallback(() => {
@@ -100,7 +107,7 @@ export function useTimedSession(
     const tick = () => {
       const sec = position();
       if (sec !== null) {
-        const k = stepAt(timedRef.current, sec);
+        const k = stepAt(timedRef.current, sec, windowRef.current);
         if (k !== indexRef.current) {
           // A loop seam: the clock jumped back to the start.
           if (k < indexRef.current) {
@@ -131,7 +138,7 @@ export function useTimedSession(
       syncHeld();
       const sec = position();
       if (sec === null) return;
-      const k = stepAt(timedRef.current, sec);
+      const k = stepAt(timedRef.current, sec, windowRef.current);
       const step = stepsRef.current[k];
       if (!step) return;
       const need = freshNotes(step);
@@ -175,7 +182,7 @@ export function useTimedSession(
     reset();
   }, [enabled, releaseAll, reset]);
 
-  const { accuracy, timing } = useMemo(() => summarise(results), [results]);
+  const { accuracy, timing, lean } = useMemo(() => summarise(results), [results]);
 
-  return { index, held, wrongNotes, last, results, accuracy, timing, finished, noteDown, noteUp, releaseAll, reset };
+  return { index, held, wrongNotes, last, results, accuracy, timing, lean, finished, noteDown, noteUp, releaseAll, reset };
 }

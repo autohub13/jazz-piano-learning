@@ -98,19 +98,19 @@ export default function PracticeWorkspace({ exercise }: { exercise: Exercise }) 
   // Recording. Each mode has one moment that is "a pass finished".
   const [verdict, setVerdict] = useState<string | null>(null);
   const record = useCallback(
-    (attempt: Attempt) => {
+    (attempt: Attempt, note = "") => {
       recordAttempt(exercise, keyName, attempt, new Date());
       refresh();
       const passed = meetsMastery(attempt, exercise.mastery);
       const pct = Math.round(attempt.accuracy * 100);
       setVerdict(
-        passed
+        (passed
           ? `${pct} percent. ${keyName} is done${keys.length > 1 ? ", pick the next key" : ""}.`
           : !attempt.clean
             ? `${pct} percent with hints showing. Run it once without them to mark it done.`
             : exercise.mastery.bpm && (!attempt.timed || (attempt.bpm ?? 0) < exercise.mastery.bpm)
               ? `${pct} percent. This one is marked done in Timed mode at ${exercise.mastery.bpm} or faster.`
-              : `${pct} percent. ${Math.round(exercise.mastery.accuracy * 100)} first try marks it done.`,
+              : `${pct} percent. ${Math.round(exercise.mastery.accuracy * 100)} first try marks it done.`) + note,
       );
     },
     [exercise, keyName, keys.length, refresh],
@@ -135,8 +135,12 @@ export default function PracticeWorkspace({ exercise }: { exercise: Exercise }) 
     }
     if (timedRecordedRef.current) return;
     timedRecordedRef.current = true;
-    record({ accuracy: timed.accuracy, timing: timed.timing, bpm, timed: true, clean: true });
-  }, [timed.finished, timed.accuracy, timed.timing, bpm, record]);
+    // Which way the time leans. Rushing is the usual fault, and it is only
+    // fixable once it is named.
+    const ms = Math.round(Math.abs(timed.lean) * 1000);
+    const lean = ms < 30 ? "" : ` On average ${ms} ms ${timed.lean < 0 ? "early: you are rushing" : "late: you are dragging"}.`;
+    record({ accuracy: timed.accuracy, timing: timed.timing, bpm, timed: true, clean: true }, lean);
+  }, [timed.finished, timed.accuracy, timed.timing, timed.lean, bpm, record]);
 
   const chorusCountRef = useRef(0);
   useEffect(() => {
@@ -396,7 +400,7 @@ export default function PracticeWorkspace({ exercise }: { exercise: Exercise }) 
           ? "correct"
           : timed.last === "miss" || timed.last === "wrong"
             ? "wrong"
-            : timed.last === "late"
+            : timed.last === "late" || timed.last === "early"
               ? "partial"
               : "awaiting"
         : mode === "ear"
@@ -521,8 +525,10 @@ export default function PracticeWorkspace({ exercise }: { exercise: Exercise }) 
             <span className="cue__hint">
               {!running
                 ? `Press Start. The band plays, the steps light up, you play them on the beat. ${exercise.mastery.bpm ? `Done at ${exercise.mastery.bpm} or faster.` : ""}`
-                : timed.last === "late"
-                  ? "Right notes, a little late."
+                : timed.last === "early"
+                  ? "Right notes, a little early. Let the beat come to you."
+                  : timed.last === "late"
+                    ? "Right notes, a little late."
                   : timed.last === "miss"
                     ? "Missed that one. Keep going."
                     : timed.last === "wrong"

@@ -7,7 +7,7 @@ const AXES: { axis: keyof Variation; caption: string; names: Record<string, stri
   {
     axis: "voicing",
     caption: "Voicing",
-    names: { written: "As written", shell: "Shells", rootless: "Rootless", drop2: "Drop 2", quartal: "Quartal" },
+    names: { written: "As written", shell: "Shells", shell3: "Full shells (a tenth)", rootless: "Rootless", drop2: "Drop 2", quartal: "Quartal" },
   },
   {
     axis: "reharm",

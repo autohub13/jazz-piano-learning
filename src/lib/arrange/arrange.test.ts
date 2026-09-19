@@ -147,6 +147,33 @@ describe("hand textures", () => {
     }
   });
 
+  it("drop 2 and quartal: neither hand is asked for more than an octave", () => {
+    const span = (notes: number[]) => (notes.length ? Math.max(...notes) - Math.min(...notes) : 0);
+    for (const tune of tunes) {
+      for (const key of KEYS) {
+        for (const voicing of ["drop2", "quartal"] as const) {
+          const lesson = arrangeTune(tune, key, { ...levelVariation(4), voicing });
+          for (const s of walk(lesson)) {
+            expect(span(s.left), `${tune.slug} ${key} ${voicing} left`).toBeLessThanOrEqual(12);
+            expect(span(s.right), `${tune.slug} ${key} ${voicing} right`).toBeLessThanOrEqual(12);
+          }
+        }
+      }
+    }
+  });
+
+  it("drop 2 under a tune: the tune on top, the dropped voice in the left hand", () => {
+    const lesson = arrangeTune(saints, "C", levelVariation(4));
+    const blocks = walk(lesson).filter((s) => s.rightStruck.length === 3);
+    expect(blocks.length).toBeGreaterThan(10);
+    for (const s of blocks) {
+      expect(s.left).toHaveLength(1);
+      const d = s.chord.degrees;
+      const tones = [d.R, d[3], d[5], d[7]].map((x) => (s.chord.rootPc + x) % 12);
+      expect(new Set([...s.left, ...s.right].map((n) => n % 12))).toEqual(new Set(tones));
+    }
+  });
+
   it("stride: bass on one and three, root on one, chord on two and four", () => {
     for (const key of KEYS) {
       const lesson = arrangeTune(saints, key, { ...shell, texture: "stride" });

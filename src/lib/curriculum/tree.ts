@@ -10,6 +10,8 @@ import { getLesson } from "@/lib/lessons/curriculum";
 import type { Lesson } from "@/lib/lessons/types";
 import { etudes } from "@/lib/tunes/etudes";
 import { findTune } from "@/lib/tunes/library";
+import { songs } from "@/lib/tunes/songs";
+import { KEY_ORDER } from "@/lib/progress";
 import {
   chordDrill,
   earLesson,
@@ -26,7 +28,7 @@ import type { Exercise, Level, Unit } from "./types";
 export const units: Unit[] = [
   { id: "keyboard", level: 1, title: "The keyboard", blurb: "Where the notes are, and the first scale." },
   { id: "chords", level: 1, title: "Chords", blurb: "Intervals, triads, and the four seventh chords." },
-  { id: "shells", level: 2, title: "Shells", blurb: "Root, 3rd, 7th. The smallest voicing that sounds like the chord." },
+  { id: "shells", level: 2, title: "Shells", blurb: "The root and one guide tone. The smallest voicing that sounds like the chord." },
   { id: "cadence", level: 2, title: "The ii-V-I", blurb: "The three chords most tunes are made of, in every key." },
   { id: "first-tunes", level: 2, title: "First tunes", blurb: "The blues, a sixteen-bar tune, and your first solo, with the band." },
   { id: "accompaniment", level: 2, title: "Accompaniment", blurb: "Which hand plays what, and which inversion the melody asks for." },
@@ -94,7 +96,7 @@ function etude(
   });
 }
 
-export const exercises: Exercise[] = [
+const core: Exercise[] = [
   // Level 1
   ex({ id: "meet-the-keyboard", title: "Meet the keyboard", kind: "drill", level: 1, unit: "keyboard", keys: ["C"], blurb: "Find C and F by the black key groups.", generate: authored("meet-the-keyboard"), minutes: 2 }),
   ex({ id: "major-scale", title: "Major scale", kind: "drill", level: 1, unit: "keyboard", blurb: "One octave up and down with the right fingering.", generate: (k) => scaleDrill("major", k), mastery: { accuracy: ALL_ACC, bpm: 100 } }),
@@ -105,7 +107,7 @@ export const exercises: Exercise[] = [
   etude({ unit: "chords", level: 1, variation: SOLO, prerequisites: ["seventh-chords"], mastery: { accuracy: ALL_ACC, bpm: 84 }, minutes: 3 }),
 
   // Level 2
-  ex({ id: "shells", title: "Shell voicings", kind: "drill", level: 2, unit: "shells", blurb: "Root, 3rd, 7th and root, 7th, 3rd for each quality.", generate: (k) => chordDrill(["maj7", "m7", "7", "m7b5"], "shell", k), prerequisites: ["seventh-chords"] }),
+  ex({ id: "shells", title: "Shell voicings", kind: "drill", level: 2, unit: "shells", blurb: "Root and 7th, then root and 3rd, for each quality.", generate: (k) => chordDrill(["maj7", "m7", "7", "m7b5"], "shell", k), prerequisites: ["seventh-chords"] }),
   etude({ unit: "shells", level: 2, variation: SHELL_HELD, prerequisites: ["shells"], mastery: { accuracy: ALL_ACC, bpm: 90 }, minutes: 4 }),
   ex({ id: "ii-v-i-shells", title: "ii-V-I in shells", kind: "progression", level: 2, unit: "cadence", blurb: "Three chords, the bass walking underneath.", generate: (k) => progressionDrill(PROGRESSIONS["ii-v-i"], k, SHELL_HELD), prerequisites: ["shells"], mastery: { accuracy: ALL_ACC, bpm: 100 }, minutes: 4 }),
   ex({ id: "the-vamp", title: "The vamp", kind: "tune", level: 2, unit: "cadence", blurb: "Two hands over the ii-V-I. The site's first piece.", generate: authored("the-vamp"), prerequisites: ["ii-v-i-shells"], mastery: { accuracy: ALL_ACC, bpm: 108 }, minutes: 5 }),
@@ -159,6 +161,8 @@ export const exercises: Exercise[] = [
   ex({ id: "improv-so-what", title: "Improvise over So What", kind: "improv", level: 5, unit: "improv", blurb: "One dorian scale for sixteen bars, then the same thing a half step up.", tune: "so-what", generate: tune("so-what", 5), prerequisites: ["scale-dorian"], mastery: { accuracy: 0.8, bpm: 130 }, minutes: 6 }),
   ex({ id: "improv-jazz-blues", title: "Improvise over the jazz blues", kind: "improv", level: 5, unit: "improv", blurb: "Every substitution a bebop player adds.", tune: "jazz-blues-f", generate: tune("jazz-blues-f", 5), prerequisites: ["improv-f-blues"], mastery: { accuracy: 0.8, bpm: 150 }, minutes: 6 }),
   ex({ id: "improv-autumn", title: "Improvise over Autumn Leaves", kind: "improv", level: 5, unit: "improv", blurb: "Thirty-two bars, major and minor.", tune: "autumn-changes", generate: tune("autumn-changes", 5), prerequisites: ["improv-jazz-blues", "autumn-changes"], mastery: { accuracy: 0.8, bpm: 150 }, minutes: 8 }),
+  ex({ id: "improv-blue-bossa", title: "Improvise over Blue Bossa", kind: "improv", level: 5, unit: "improv", blurb: "Sixteen bars in minor, with four bars a half step above home in the middle.", tune: "blue-bossa", generate: tune("blue-bossa", 5), prerequisites: ["improv-ii-v-i", "minor-ii-v-i"], mastery: { accuracy: 0.8, bpm: 130 }, minutes: 6 }),
+  ex({ id: "improv-tune-up", title: "Improvise over Tune Up", kind: "improv", level: 5, unit: "improv", blurb: "Three ii-V-Is, each a whole step below the last. One idea, moved.", tune: "tune-up", generate: tune("tune-up", 5), prerequisites: ["improv-ii-v-i"], mastery: { accuracy: 0.8, bpm: 150 }, minutes: 6 }),
   etude({ unit: "improv", level: 5, variation: ROOTLESS_CHARLESTON, prerequisites: ["improv-ii-v-i"], mastery: { accuracy: ALL_ACC, bpm: 120 }, minutes: 5 }),
   ex({ id: "ear-quality", title: "Hear the quality", kind: "ear", level: 5, unit: "ears", blurb: "A seventh chord is played. Play it back.", generate: (k) => earLesson("quality", k), prerequisites: ["rootless-forms"], mastery: { accuracy: 0.85 }, minutes: 4 }),
   ex({ id: "ear-cadence", title: "Hear the cadence", kind: "ear", level: 5, unit: "ears", blurb: "Major, minor or tritone ii-V-I. Play what you heard.", generate: (k) => earLesson("cadence", k), prerequisites: ["ear-quality", "minor-ii-v-i"], mastery: { accuracy: 0.85 }, minutes: 5 }),
@@ -173,6 +177,56 @@ export const exercises: Exercise[] = [
   ex({ id: "uptempo-blues", title: "Uptempo jazz blues", kind: "tune", level: 6, unit: "advanced", blurb: "The jazz blues at 220 and above.", tune: "jazz-blues-f", generate: tune("jazz-blues-f", 6), prerequisites: ["improv-jazz-blues"], mastery: { accuracy: ALL_ACC, bpm: 220 }, minutes: 5 }),
   etude({ unit: "advanced", level: 6, variation: QUARTAL, prerequisites: ["iii-vi-ii-v"], mastery: { accuracy: ALL_ACC, bpm: 160 }, minutes: 4 }),
 ];
+
+/** The drill a unit's songs put to work, unless a song names its own. */
+const SONG_NEEDS: Record<string, string[]> = {
+  keyboard: ["major-scale"],
+  chords: ["seventh-chords"],
+  shells: ["shells"],
+  cadence: ["ii-v-i-shells"],
+  "first-tunes": ["shells"],
+  accompaniment: ["melody-on-top"],
+  rootless: ["ii-v-i-rootless"],
+  comping: ["turnaround"],
+  minor: ["minor-ii-v-i"],
+  colour: ["tritone-sub"],
+  lines: ["guide-tones"],
+  ears: ["ear-quality"],
+  advanced: ["quartal-forms"],
+};
+
+/**
+ * A unit's songs from the song book. A song counts in four keys, its own and
+ * the next three round the circle of fourths, because that is how tunes are
+ * really learned; the first unit keeps to C, F and G.
+ */
+function songsFor(unit: Unit): Exercise[] {
+  return (songs[unit.id] ?? []).map((s) => {
+    const home = KEY_ORDER.indexOf(s.tune.key);
+    const bars = s.tune.form.split("|").filter((b) => b.trim()).length;
+    return {
+      ...ex({
+        id: s.tune.slug,
+        title: s.tune.title,
+        kind: "tune",
+        level: unit.level,
+        unit: unit.id,
+        blurb: s.tune.blurb,
+        keys: unit.id === "keyboard" ? ["C", "F", "G"] : [0, 1, 2, 3].map((i) => KEY_ORDER[(home + i) % 12]),
+        generate: (key) => arrangeTune(s.tune, key, s.variation),
+        prerequisites: s.needs ?? SONG_NEEDS[unit.id],
+        mastery: { accuracy: ALL_ACC, bpm: s.masteryBpm },
+        minutes: bars > 8 ? 4 : 3,
+      }),
+      teachingPoints: s.points,
+    };
+  });
+}
+
+/** Each unit's songs sit just before the etude that closes it. */
+export const exercises: Exercise[] = core.flatMap((e) =>
+  e.etude ? [...songsFor(units.find((u) => u.id === e.unit)!), e] : [e],
+);
 
 export function findExercise(id: string): Exercise | undefined {
   return exercises.find((e) => e.id === id);

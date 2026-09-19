@@ -37,7 +37,7 @@ describe("snapToChord", () => {
 
 describe("voice", () => {
   const range = { low: 48, high: 72, ceiling: 64 };
-  const styles: VoicingStyle[] = ["shell", "rootless", "drop2", "quartal"];
+  const styles: VoicingStyle[] = ["shell", "shell3", "rootless", "drop2", "quartal"];
 
   it.each(styles)("%s leads through ii-V-I without leaping", (style) => {
     let prev: number[] | null = null;
@@ -50,7 +50,7 @@ describe("voice", () => {
       }
       // Each voice to its nearest neighbour and back: a shell's root moves a
       // fourth or fifth, everything else should barely move.
-      if (prev) expect(movement(prev, notes)).toBeLessThanOrEqual(style === "shell" ? 16 : 12);
+      if (prev) expect(movement(prev, notes)).toBeLessThanOrEqual(style === "shell3" ? 16 : 12);
       prev = notes;
     }
   });
