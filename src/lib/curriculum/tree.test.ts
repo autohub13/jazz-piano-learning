@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 import { KEYS } from "@/lib/lessons/transpose";
-import { TEACHING } from "./teaching";
+import { splitTip, TEACHING } from "./teaching";
 import { exercises, findExercise, units } from "./tree";
 
 describe("skill tree", () => {
@@ -20,6 +20,18 @@ describe("skill tree", () => {
   it("gives every exercise teaching points, and no points to a missing exercise", () => {
     for (const e of exercises) expect(e.teachingPoints.length, e.id).toBeGreaterThanOrEqual(3);
     for (const id of Object.keys(TEACHING)) expect(findExercise(id), id).toBeDefined();
+  });
+
+  it("splits every point into a headline that stands alone, losing nothing", () => {
+    expect(splitTip("Then the 7th. With a major 3rd it is maj7. More.")).toEqual({ head: "Then the 7th. With a major 3rd it is maj7.", rest: "More." });
+    expect(splitTip("Relax.")).toEqual({ head: "Relax.", rest: "" });
+    for (const e of exercises) {
+      for (const p of e.teachingPoints) {
+        const { head, rest } = splitTip(p);
+        expect(rest ? `${head} ${rest}` : head, e.id).toBe(p);
+        expect(head, e.id).toMatch(/[.?!]$/);
+      }
+    }
   });
 
   it("explains every chord it analyses, in every key", () => {

@@ -663,17 +663,147 @@ button.theory__chip:hover {
   margin-top: 1.1rem;
 }
 
-.lesson-body__notes ul {
+.lesson-body__notes > p {
   margin: 0;
-  padding-left: 1.05rem;
-  display: grid;
-  gap: 0.6rem;
-}
-
-.lesson-body__notes li {
   font-size: 0.875rem;
   line-height: 1.55;
   color: hsl(var(--muted-foreground));
+}
+
+/* One teaching point at a time. The cards share a grid cell, so the tallest
+   headline sets the height and the buttons under them hold still. */
+.tips {
+  margin: 0.9rem 0 1.4rem;
+}
+
+.tips__cards {
+  display: grid;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.tips__card {
+  grid-area: 1 / 1;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 0.45rem;
+  padding: 0.85rem 1rem 0.9rem;
+  border: 1px solid hsl(var(--border));
+  border-radius: calc(var(--radius) - 2px);
+  background: hsl(var(--muted) / 0.4);
+  visibility: hidden;
+  opacity: 0;
+}
+
+.tips__card.is-on {
+  visibility: visible;
+  opacity: 1;
+  transition: opacity 0.2s ease;
+}
+
+.tips__label {
+  font-size: 0.7rem;
+  text-transform: uppercase;
+  letter-spacing: 0.14em;
+  color: hsl(var(--muted-foreground));
+  font-variant-numeric: tabular-nums;
+}
+
+.tips__head,
+.tips__rest {
+  margin: 0;
+}
+
+.tips__head {
+  font-size: 1rem;
+  line-height: 1.45;
+}
+
+.tips__rest {
+  font-size: 0.875rem;
+  line-height: 1.55;
+  color: hsl(var(--muted-foreground));
+}
+
+.tips__more {
+  margin-top: auto;
+  padding: 0.2rem 0;
+  font-size: 0.8rem;
+  color: hsl(var(--primary));
+  cursor: pointer;
+}
+
+.tips__more:hover {
+  text-decoration: underline;
+}
+
+.tips__nav {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.5rem;
+  margin-top: 0.6rem;
+}
+
+.tips__nav .btn {
+  padding-inline: 0.6rem;
+}
+
+/* Seven dots and two buttons have to fit a 19rem column, so the dots give way. */
+.tips__dots {
+  display: flex;
+  justify-content: center;
+  flex: 1 1 0;
+  min-width: 0;
+}
+
+/* The dot is drawn inside a larger button, so it can be hit. */
+.tips__dot {
+  display: grid;
+  place-items: center;
+  flex: 0 1 1.1rem;
+  min-width: 0;
+  height: 1.75rem;
+  cursor: pointer;
+}
+
+.tips__dot::before {
+  content: "";
+  width: 0.4rem;
+  height: 0.4rem;
+  border-radius: 999px;
+  background: hsl(var(--border));
+  transition: background 0.15s ease, transform 0.15s ease;
+}
+
+.tips__dot:hover::before {
+  background: hsl(var(--muted-foreground));
+}
+
+.tips__dot.is-on::before {
+  background: hsl(var(--primary));
+  transform: scale(1.35);
+}
+
+/* What a pass has to clear, as chips rather than a sentence. */
+.lesson-body__bar {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.4rem;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.lesson-body__bar li {
+  padding: 0.25rem 0.6rem;
+  border: 1px solid hsl(var(--border));
+  border-radius: 999px;
+  font-size: 0.78rem;
+  color: hsl(var(--muted-foreground));
+  font-variant-numeric: tabular-nums;
 }
 
 .lesson-nav {
@@ -1838,6 +1968,15 @@ button.theory__chip:hover {
     min-height: 2.5rem;
   }
 
+  .tips__dot {
+    flex-basis: 1.5rem;
+    height: 2.75rem;
+  }
+
+  .tips__more {
+    padding-block: 0.6rem;
+  }
+
   .site-header__nav a,
   .dev-toggle {
     padding-block: 0.6rem;
@@ -2047,7 +2186,7 @@ button.theory__chip:hover {
     padding: 1rem;
   }
 
-  .lesson-body__notes li {
+  .tips__rest {
     font-size: 0.92rem;
   }
 

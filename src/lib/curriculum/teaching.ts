@@ -630,3 +630,13 @@ export const TEACHING: Record<string, string[]> = {
     "The vibraphone has the first four bars and the horns answer in the next four. A snare fill marks each hand-over, so you can hear where you are in the form without counting.",
   ],
 };
+
+/**
+ * A point as a headline and the rest. The headline is the opening sentence,
+ * or the first two when the opener is too short to stand alone ("Then the 7th.").
+ */
+export function splitTip(point: string): { head: string; rest: string } {
+  const ends = [...point.matchAll(/[.?!](?=\s)/g)].map((m) => m.index + 1);
+  const cut = ends.find((end) => point.slice(0, end).split(" ").length >= 5) ?? point.length;
+  return { head: point.slice(0, cut), rest: point.slice(cut).trim() };
+}
