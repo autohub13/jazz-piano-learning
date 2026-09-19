@@ -45,11 +45,24 @@ describe("sheetOf", () => {
     expect(sheetOf(findExercise("bb-blues")!.generate("Bb"))).toBeNull();
   });
 
+  it("writes the left hand under a tune, every note a step plays in one hand or the other", () => {
+    const lesson = findExercise("etude-cadence")!.generate("C");
+    const sheet = sheetOf(lesson)!;
+    expect(sheet.left.length).toBeGreaterThan(0);
+    lesson.steps.forEach((step, i) => {
+      step.notes.forEach((midi, j) => {
+        const hand = step.hands?.[j] ?? step.hand;
+        const events = hand === "left" ? sheet.left : sheet.events;
+        expect(events.some((e) => e.fromStep <= i && i < e.toStep && e.notes.some((n) => n.midi === midi)), `step ${i} note ${midi}`).toBe(true);
+      });
+    });
+  });
+
   it("keeps every event inside its bar, in every exercise and key", () => {
     for (const e of exercises) {
       for (const key of e.keys === "all" ? KEYS : e.keys) {
         const sheet = sheetOf(e.generate(key));
-        for (const event of sheet?.events ?? []) {
+        for (const event of [...(sheet?.events ?? []), ...(sheet?.left ?? [])]) {
           expect(event.pos, `${e.id} ${key}`).toBeGreaterThanOrEqual(0);
           expect(event.pos + event.beats, `${e.id} ${key}`).toBeLessThanOrEqual(sheet!.beatsPerBar + 1e-6);
           expect(event.bar, `${e.id} ${key}`).toBeLessThan(sheet!.bars);

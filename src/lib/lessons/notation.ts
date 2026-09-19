@@ -1,11 +1,11 @@
-// A lesson's right hand as something a staff can draw: notes placed in bars,
-// split and tied at the barlines, with swung rhythms written as the straight
-// eighths a lead sheet uses. The left hand stays on the keyboard below, as it
-// does on a real lead sheet, where it is a chord symbol and nothing more.
+// A lesson's two hands as something a grand staff can draw: notes placed in
+// bars, split and tied at the barlines, with swung rhythms written as the
+// straight eighths a lead sheet uses. The right hand goes on the treble staff
+// and the left, when it plays under a tune, on the bass staff below it.
 
 import { spellInChord } from "@/lib/music/harmony";
 import { letterIndex, pitchClassName, type Midi } from "@/lib/music/notes";
-import type { Lesson } from "./types";
+import type { Hand, Lesson } from "./types";
 
 export type Glyph = "whole" | "half" | "quarter" | "eighth" | "sixteenth";
 
@@ -37,7 +37,10 @@ export interface Sheet {
   beatsPerBar: number;
   /** True when bar zero is a pickup, drawn short and before bar one. */
   pickup: boolean;
+  /** The right hand, for the treble staff. */
   events: StaffEvent[];
+  /** The left hand, for the bass staff. Empty when the tune is one hand alone. */
+  left: StaffEvent[];
   chords: { bar: number; pos: number; symbol: string }[];
   barOfStep: number[];
 }
@@ -103,61 +106,67 @@ export function sheetOf(lesson: Lesson): Sheet | null {
     return region ? spellInChord(region.symbol, midi, lesson.spelling) : pitchClassName(midi, lesson.spelling);
   };
 
-  const isRight = (i: number, j: number) => (lesson.steps[i].hands?.[j] ?? lesson.steps[i].hand) === "right";
-  const events: StaffEvent[] = [];
-  lesson.steps.forEach((step, i) => {
-    const struck = step.notes.filter((_, j) => isRight(i, j) && !step.tied?.[j]);
-    if (struck.length === 0) return;
-    // It sounds for as long as the steps after it carry it on as a tie.
-    let to = i + 1;
-    while (
-      to < lesson.steps.length &&
-      struck.every((n) => lesson.steps[to].notes.some((m, j) => m === n && isRight(to, j) && lesson.steps[to].tied?.[j]))
-    ) {
-      to++;
-    }
-    let from = written(starts[i]);
-    const end = Math.max(from + 0.25, written(to < starts.length ? starts[to] : total));
-    while (from < end - 1e-6) {
-      const bar = barAt(from);
-      const stop = Math.min(end, (bar + 1) * perBar - offset);
-      events.push({
-        bar,
-        pos: posAt(from),
-        beats: stop - from,
-        ...glyphFor(stop - from),
-        notes: [...struck].sort((a, b) => a - b).map((midi) => ({ midi, step: place(nameAt(i, midi), midi).step, sign: null })),
-        tied: stop < end - 1e-6,
-        fromStep: i,
-        toStep: to,
-      });
-      from = stop;
-    }
-  });
-  if (events.length === 0) return null;
+  const eventsOf = (hand: Hand): StaffEvent[] => {
+    const isHand = (i: number, j: number) => (lesson.steps[i].hands?.[j] ?? lesson.steps[i].hand) === hand;
+    const events: StaffEvent[] = [];
+    lesson.steps.forEach((step, i) => {
+      const struck = step.notes.filter((_, j) => isHand(i, j) && !step.tied?.[j]);
+      if (struck.length === 0) return;
+      // It sounds for as long as the steps after it carry it on as a tie.
+      let to = i + 1;
+      while (
+        to < lesson.steps.length &&
+        struck.every((n) => lesson.steps[to].notes.some((m, j) => m === n && isHand(to, j) && lesson.steps[to].tied?.[j]))
+      ) {
+        to++;
+      }
+      let from = written(starts[i]);
+      const end = Math.max(from + 0.25, written(to < starts.length ? starts[to] : total));
+      while (from < end - 1e-6) {
+        const bar = barAt(from);
+        const stop = Math.min(end, (bar + 1) * perBar - offset);
+        events.push({
+          bar,
+          pos: posAt(from),
+          beats: stop - from,
+          ...glyphFor(stop - from),
+          notes: [...struck].sort((a, b) => a - b).map((midi) => ({ midi, step: place(nameAt(i, midi), midi).step, sign: null })),
+          tied: stop < end - 1e-6,
+          fromStep: i,
+          toStep: to,
+        });
+        from = stop;
+      }
+    });
 
-  // There is no key signature, so every sharp or flat is written, once a bar,
-  // and a natural is written when the same line goes back.
-  let bar = -1;
-  let state = new Map<number, "#" | "b" | null>();
-  for (const event of events) {
-    if (event.bar !== bar) {
-      bar = event.bar;
-      state = new Map();
+    // There is no key signature, so every sharp or flat is written, once a bar
+    // on each staff, and a natural is written when the same line goes back.
+    let bar = -1;
+    let state = new Map<number, "#" | "b" | null>();
+    for (const event of events) {
+      if (event.bar !== bar) {
+        bar = event.bar;
+        state = new Map();
+      }
+      for (const note of event.notes) {
+        const { accidental } = place(nameAt(event.fromStep, note.midi), note.midi);
+        const before = state.get(note.step) ?? null;
+        if (accidental !== before) note.sign = accidental ?? "n";
+        state.set(note.step, accidental);
+      }
     }
-    for (const note of event.notes) {
-      const { accidental } = place(nameAt(event.fromStep, note.midi), note.midi);
-      const before = state.get(note.step) ?? null;
-      if (accidental !== before) note.sign = accidental ?? "n";
-      state.set(note.step, accidental);
-    }
-  }
+    return events;
+  };
+
+  const events = eventsOf("right");
+  if (events.length === 0) return null;
 
   return {
     bars: barAt(total - 1e-3) + 1,
     beatsPerBar: perBar,
     pickup: lead > 0,
     events,
+    left: eventsOf("left"),
     chords: (lesson.harmony ?? []).map((region) => {
       // A chord pushed onto the "and" before the bar is still written on the bar.
       const beat = Math.round(starts[region.fromStep] ?? 0);

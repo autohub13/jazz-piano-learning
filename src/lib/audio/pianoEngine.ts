@@ -5,7 +5,7 @@
 // The AudioContext must be constructed inside a user gesture (browser autoplay
 // policy), so creation is deferred until the Start button is pressed.
 
-import { SplendidGrandPiano } from "smplr";
+import { Reverb, SplendidGrandPiano } from "smplr";
 import { midiToFreq, type Midi } from "@/lib/music/notes";
 
 export type EngineStatus = "idle" | "loading" | "ready" | "fallback" | "error";
@@ -22,6 +22,8 @@ export interface StartOptions {
 export interface PianoEngine {
   readonly ctx: AudioContext;
   readonly kind: "sampled" | "synth";
+  /** Where anything that should share the piano's room connects: the band. */
+  readonly output: AudioNode;
   start(opts: StartOptions): () => void;
   /** Release one note, or every sounding note when omitted. */
   stop(note?: Midi): void;
@@ -35,14 +37,53 @@ export interface PianoEngine {
 const LOAD_TIMEOUT_MS = 10_000;
 
 /**
+ * The one bus the piano and the band both play into: straight through to the
+ * speakers, plus a send to a small, dark room. Dry instruments are most of
+ * what makes a web page sound like a web page. The send is cut below the
+ * bass's range, because a bass line in a reverb is mud.
+ */
+function createOutputBus(ctx: AudioContext): AudioNode {
+  const input = ctx.createGain();
+  input.connect(ctx.destination);
+
+  // Wet only, and it connects itself to ctx.destination.
+  const reverb = Reverb(ctx);
+  const lowCut = ctx.createBiquadFilter();
+  lowCut.type = "highpass";
+  lowCut.frequency.value = 220;
+  const send = ctx.createGain();
+  send.gain.value = 0.32;
+  input.connect(lowCut).connect(send).connect(reverb.input);
+
+  reverb
+    .ready()
+    .then(() => {
+      const set = (name: Parameters<typeof reverb.getParam>[0], value: number) => {
+        const param = reverb.getParam(name);
+        if (param) param.value = value;
+      };
+      // In samples, not seconds.
+      set("preDelay", Math.round(ctx.sampleRate * 0.018));
+      set("decay", 0.55);
+      // The default is close to undamped, which rings like a tin on the cymbals.
+      set("damping", 0.35);
+    })
+    // The reverb runs in an AudioWorklet. Where that cannot load, the dry path
+    // above is already connected and everything still plays, just without a room.
+    .catch(() => {});
+
+  return input;
+}
+
+/**
  * A plain-oscillator piano-ish voice used when samples are unavailable. Two
  * detuned triangles plus a sine sub, with a fast attack and a long exponential
  * decay, which is close enough in shape to be musically usable.
  */
-function createFallbackSynth(ctx: AudioContext): PianoEngine {
+function createFallbackSynth(ctx: AudioContext, output: AudioNode): PianoEngine {
   const master = ctx.createGain();
   master.gain.value = 0.25;
-  master.connect(ctx.destination);
+  master.connect(output);
 
   const sounding = new Map<Midi, (() => void)[]>();
   // Notes booked for the future. Kept apart from `sounding` so that lifting a
@@ -122,6 +163,7 @@ function createFallbackSynth(ctx: AudioContext): PianoEngine {
   return {
     ctx,
     kind: "synth",
+    output,
     start,
     stop(note) {
       if (note === undefined) {
@@ -147,7 +189,7 @@ function createFallbackSynth(ctx: AudioContext): PianoEngine {
   };
 }
 
-function wrapSampledPiano(ctx: AudioContext, piano: SplendidGrandPiano): PianoEngine {
+function wrapSampledPiano(ctx: AudioContext, piano: SplendidGrandPiano, output: AudioNode): PianoEngine {
   // Held notes are released through the StopFn that start() handed back. That
   // is more precise than stop({ note }) and stays correct when the same note is
   // retriggered before the first one is released.
@@ -156,6 +198,7 @@ function wrapSampledPiano(ctx: AudioContext, piano: SplendidGrandPiano): PianoEn
   return {
     ctx,
     kind: "sampled",
+    output,
     start({ note, time, duration, velocity = 90 }) {
       const stopFn = piano.start({ note, time, duration, velocity });
       if (duration == null) {
@@ -196,10 +239,12 @@ export async function createPianoEngine(cb: CreateEngineCallbacks): Promise<Pian
   const ctx = new Ctor();
   await ctx.resume();
 
+  const output = createOutputBus(ctx);
   cb.onStatus("loading");
 
   try {
     const piano = SplendidGrandPiano(ctx, {
+      destination: output,
       onLoadProgress: ({ loaded, total }) => cb.onProgress(loaded, total),
     });
     const timeout = new Promise<never>((_, reject) =>
@@ -207,11 +252,11 @@ export async function createPianoEngine(cb: CreateEngineCallbacks): Promise<Pian
     );
     await Promise.race([piano.ready, timeout]);
     cb.onStatus("ready");
-    return wrapSampledPiano(ctx, piano);
+    return wrapSampledPiano(ctx, piano, output);
   } catch {
     // A slow CDN, an offline machine, or a blocked request. The lesson still
     // works, it just sounds synthetic, and the UI says so.
     cb.onStatus("fallback");
-    return createFallbackSynth(ctx);
+    return createFallbackSynth(ctx, output);
   }
 }

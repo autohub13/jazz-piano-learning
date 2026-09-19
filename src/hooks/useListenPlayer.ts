@@ -87,7 +87,7 @@ export function useListenPlayer(
 
   useEffect(() => {
     if (!engine || !chart) return;
-    const band = createBand(engine.ctx, chart);
+    const band = createBand(engine.ctx, chart, engine.output);
     bandRef.current = band;
     return () => {
       band.dispose();
@@ -135,6 +135,10 @@ export function useListenPlayer(
         if (s.endSec <= fromSec) continue;
         if (s.startSec >= stopSec - 1e-6) break;
         const first = s.startSec <= fromSec;
+        // Voiced as a pianist would: the top note sings and what is under it
+        // sits back. The two velocities also land on different sample layers,
+        // so the tune is brighter than the chord and not only louder.
+        const top = Math.max(...s.notes);
         for (const note of s.notes) {
           if (!first && tiedAt(i, note)) continue;
           let last = i;
@@ -145,7 +149,7 @@ export function useListenPlayer(
             note,
             time: start,
             duration: Math.max(0.05, t0 + Math.min(timed[last].endSec - tail, stopSec) - start),
-            velocity: 82,
+            velocity: note === top ? 90 : 72,
           });
         }
       }

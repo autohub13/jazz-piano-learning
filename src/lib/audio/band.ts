@@ -36,10 +36,22 @@ interface Voice {
   sources: AudioScheduledSourceNode[];
 }
 
-export function createBand(ctx: AudioContext, chart: BandChart): Band {
+export function createBand(ctx: AudioContext, chart: BandChart, destination: AudioNode): Band {
   const master = ctx.createGain();
   master.gain.value = 0.55;
-  master.connect(ctx.destination);
+  master.connect(destination);
+
+  // Where the players stand. Bass, kick and snare stay in the middle with the
+  // piano; the guitar, the horns and the crash are to the left, the ride, the
+  // hi-hat and the vibes to the right.
+  const place = (pan: number) => {
+    const panner = ctx.createStereoPanner();
+    panner.pan.value = pan;
+    panner.connect(master);
+    return panner;
+  };
+  const left = place(-0.35);
+  const right = place(0.35);
 
   // One noise buffer, reused by every cymbal and brush hit.
   const noise = ctx.createBuffer(1, ctx.sampleRate * 2, ctx.sampleRate);
@@ -60,7 +72,7 @@ export function createBand(ctx: AudioContext, chart: BandChart): Band {
   /** Filtered noise burst. The whole kit is built from this. */
   function hit(
     t: number,
-    opts: { level: number; decay: number; type: BiquadFilterType; freq: number; q?: number },
+    opts: { level: number; decay: number; type: BiquadFilterType; freq: number; q?: number; out?: AudioNode },
   ) {
     const src = ctx.createBufferSource();
     src.buffer = noise;
@@ -76,7 +88,7 @@ export function createBand(ctx: AudioContext, chart: BandChart): Band {
     gain.gain.exponentialRampToValueAtTime(opts.level, t + 0.004);
     gain.gain.exponentialRampToValueAtTime(0.0001, t + opts.decay);
 
-    src.connect(filter).connect(gain).connect(master);
+    src.connect(filter).connect(gain).connect(opts.out ?? master);
     src.start(t);
     src.stop(t + opts.decay + 0.02);
     track({ gain, sources: [src] });
@@ -84,7 +96,7 @@ export function createBand(ctx: AudioContext, chart: BandChart): Band {
 
   /** Ride cymbal. A wash of noise with a little metallic ping on top. */
   function ride(t: number, level: number, decay: number) {
-    hit(t, { level, decay, type: "bandpass", freq: 7200, q: 0.7 });
+    hit(t, { level, decay, type: "bandpass", freq: 7200, q: 0.7, out: right });
 
     const osc = ctx.createOscillator();
     osc.type = "square";
@@ -93,7 +105,7 @@ export function createBand(ctx: AudioContext, chart: BandChart): Band {
     gain.gain.setValueAtTime(0.0001, t);
     gain.gain.exponentialRampToValueAtTime(level * 0.22, t + 0.003);
     gain.gain.exponentialRampToValueAtTime(0.0001, t + Math.min(decay, 0.22));
-    osc.connect(gain).connect(master);
+    osc.connect(gain).connect(right);
     osc.start(t);
     osc.stop(t + decay + 0.02);
     track({ gain, sources: [osc] });
@@ -101,7 +113,7 @@ export function createBand(ctx: AudioContext, chart: BandChart): Band {
 
   /** The hi-hat chick on two and four, closed with the foot. */
   function hat(t: number) {
-    hit(t, { level: 0.055, decay: 0.07, type: "highpass", freq: 8000 });
+    hit(t, { level: 0.055, decay: 0.07, type: "highpass", freq: 8000, out: right });
   }
 
   /** Feathered kick: felt more than heard, on the downbeat only. */
@@ -193,7 +205,7 @@ export function createBand(ctx: AudioContext, chart: BandChart): Band {
     gain.gain.setValueAtTime(0.0001, t);
     gain.gain.exponentialRampToValueAtTime(level, t + 0.006);
     gain.gain.exponentialRampToValueAtTime(0.0001, t + 0.2);
-    filter.connect(gain).connect(master);
+    filter.connect(gain).connect(left);
 
     const sources: AudioScheduledSourceNode[] = [];
     notes.forEach((note, i) => {
@@ -217,7 +229,7 @@ export function createBand(ctx: AudioContext, chart: BandChart): Band {
 
   /** Crash cymbal, for the top of the form. */
   function crash(t: number) {
-    hit(t, { level: 0.11, decay: 1.6, type: "highpass", freq: 5200 });
+    hit(t, { level: 0.11, decay: 1.6, type: "highpass", freq: 5200, out: left });
   }
 
   /**
@@ -238,7 +250,7 @@ export function createBand(ctx: AudioContext, chart: BandChart): Band {
     const depth = ctx.createGain();
     depth.gain.value = 0.2;
     motor.connect(depth).connect(tremolo.gain);
-    gain.connect(tremolo).connect(master);
+    gain.connect(tremolo).connect(right);
 
     const sources: AudioScheduledSourceNode[] = [motor];
     for (const note of notes) {
@@ -281,7 +293,7 @@ export function createBand(ctx: AudioContext, chart: BandChart): Band {
     gain.gain.exponentialRampToValueAtTime(0.05, t + attack);
     gain.gain.setValueAtTime(0.05, t + Math.max(attack, dur - 0.08));
     gain.gain.exponentialRampToValueAtTime(0.0001, t + dur);
-    filter.connect(gain).connect(master);
+    filter.connect(gain).connect(left);
 
     const sources: AudioScheduledSourceNode[] = [];
     for (const note of notes) {
